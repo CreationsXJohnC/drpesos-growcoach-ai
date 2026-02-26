@@ -1,6 +1,8 @@
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/ai/anthropic";
 import { GROW_CALENDAR_SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
+import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import type { GrowSetup } from "@/types/grow";
 
 export const runtime = "nodejs";
@@ -8,7 +10,58 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
-    const setup: GrowSetup = await req.json();
+    // ── Auth check ──────────────────────────────────────────────────
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll(); },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch { /* Server Component context — safe to ignore */ }
+          },
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const body = await req.json();
+    const { demo, ...setupData } = body as GrowSetup & { demo?: boolean };
+    const setup = setupData as GrowSetup;
+
+    if (!user && !demo) {
+      return NextResponse.json(
+        { error: "unauthorized", message: "Please sign in to generate a grow calendar." },
+        { status: 401 }
+      );
+    }
+
+    // ── Subscription check: calendar generation requires paid tier ──
+    // (Free trial users can generate one calendar to demo the feature)
+    if (user && !demo) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("subscription_tier, trial_start_date")
+        .eq("id", user.id)
+        .single();
+
+      if (profile && profile.subscription_tier === "free") {
+        const trialStart = new Date(profile.trial_start_date ?? 0);
+        const hoursElapsed = (Date.now() - trialStart.getTime()) / (1000 * 60 * 60);
+        if (hoursElapsed > 48) {
+          return NextResponse.json(
+            { error: "upgrade_required", reason: "trial_expired", message: "Your free trial has ended. Upgrade to generate grow calendars." },
+            { status: 402 }
+          );
+        }
+      }
+    }
 
     const userPrompt = buildCalendarPrompt(setup);
 

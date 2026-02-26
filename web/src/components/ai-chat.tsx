@@ -46,6 +46,21 @@ export function AiChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Listen for external open-chat events (from dashboard quick links)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setOpen(true);
+      const detail = (e as CustomEvent).detail;
+      if (detail?.prompt) {
+        setInput(detail.prompt);
+        // Focus the textarea after opening
+        setTimeout(() => textareaRef.current?.focus(), 100);
+      }
+    };
+    window.addEventListener("open-dr-pesos-chat", handler);
+    return () => window.removeEventListener("open-dr-pesos-chat", handler);
+  }, [setOpen]);
+
   const sendMessage = useCallback(
     async (content: string) => {
       if (!content.trim() && !uploadedImage) return;
@@ -88,7 +103,21 @@ export function AiChat() {
           }),
         });
 
-        if (!response.ok) throw new Error("Chat request failed");
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          if (response.status === 401) {
+            updateMessage(assistantId, "🔒 **Sign in required** — Please [sign in](/auth/login) to chat with Dr. Pesos.");
+          } else if (response.status === 402) {
+            const msg = errData.reason === "trial_expired"
+              ? "⏰ **Your free trial has ended.** [Upgrade your plan](/pricing) to continue getting expert cultivation guidance from Dr. Pesos."
+              : "📊 **Daily limit reached.** You've used all 3 free questions for today. [Upgrade](/pricing) for unlimited access.";
+            updateMessage(assistantId, msg);
+          } else {
+            throw new Error("Chat request failed");
+          }
+          setLoading(false);
+          return;
+        }
 
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();

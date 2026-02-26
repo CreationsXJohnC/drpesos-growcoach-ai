@@ -1,7 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getAnthropicClient, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/ai/anthropic";
 import { DR_PESOS_SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
+import { createServerClient } from "@supabase/ssr";
+import { checkAndIncrementQuestion } from "@/lib/supabase/queries";
 import { NextRequest } from "next/server";
+import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -37,11 +40,59 @@ function toAnthropicContent(
 
 export async function POST(req: NextRequest) {
   try {
+    // ── Auth check ──────────────────────────────────────────────────
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll(); },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch { /* Server Component context — safe to ignore */ }
+          },
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Allow unauthenticated users through only if demo mode is flagged
     const body = await req.json();
-    const { messages, growContext } = body as {
+    const { messages, growContext, demo } = body as {
       messages: IncomingMessage[];
       growContext?: { stage?: string; week?: number; strainType?: string };
+      demo?: boolean;
     };
+
+    if (!user && !demo) {
+      return new Response(
+        JSON.stringify({ error: "unauthorized", message: "Please sign in to chat with Dr. Pesos." }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── Trial / subscription gating (skip for demo mode) ────────────
+    if (user && !demo) {
+      const gate = await checkAndIncrementQuestion(user.id);
+      if (!gate.allowed) {
+        return new Response(
+          JSON.stringify({
+            error: "upgrade_required",
+            reason: gate.reason,
+            message:
+              gate.reason === "trial_expired"
+                ? "Your 48-hour free trial has ended. Upgrade to continue chatting with Dr. Pesos."
+                : "You've reached today's 3-question limit. Upgrade for unlimited access.",
+          }),
+          { status: 402, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(
@@ -50,7 +101,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Build system prompt with optional grow context injection
+    // ── Build system prompt with optional grow context ───────────────
     let systemPrompt = DR_PESOS_SYSTEM_PROMPT;
     if (growContext) {
       systemPrompt += `\n\n====================================================================
