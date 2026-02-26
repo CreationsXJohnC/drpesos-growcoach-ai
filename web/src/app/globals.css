@@ -1,0 +1,193 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Dr. Pesos Brand Colors */
+  --color-brand-green: var(--brand-green);
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-darker: var(--brand-darker);
+  --color-brand-green-glow: var(--brand-green-glow);
+  --color-brand-purple-glow: var(--brand-purple-glow);
+}
+
+/* ====================================
+   LIGHT MODE — "Apple Clean"
+   Background: #F8F8F8, charcoal text, green accents
+   ==================================== */
+:root {
+  --radius: 0.625rem;
+
+  /* Dr. Pesos Brand */
+  --brand-green: #22C55E;
+  --brand-purple: #A855F7;
+  --brand-dark: #111111;
+  --brand-darker: #0A0A0A;
+  --brand-green-glow: rgba(34, 197, 94, 0.2);
+  --brand-purple-glow: rgba(168, 85, 247, 0.2);
+
+  /* Light mode UI */
+  --background: oklch(0.976 0 0);        /* #F8F8F8 equivalent */
+  --foreground: oklch(0.13 0 0);          /* Deep charcoal */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.13 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.13 0 0);
+  --primary: oklch(0.527 0.183 142.5);   /* Brand green #22C55E */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.96 0 0);
+  --secondary-foreground: oklch(0.13 0 0);
+  --muted: oklch(0.96 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: oklch(0.527 0.183 142.5);    /* Green accent */
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.88 0 0);
+  --input: oklch(0.88 0 0);
+  --ring: oklch(0.527 0.183 142.5);      /* Green ring */
+  --chart-1: oklch(0.527 0.183 142.5);   /* Green */
+  --chart-2: oklch(0.65 0.25 294);       /* Purple */
+  --chart-3: oklch(0.65 0.15 200);
+  --chart-4: oklch(0.8 0.15 80);
+  --chart-5: oklch(0.7 0.2 50);
+  --sidebar: oklch(0.97 0 0);
+  --sidebar-foreground: oklch(0.13 0 0);
+  --sidebar-primary: oklch(0.527 0.183 142.5);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.95 0 0);
+  --sidebar-accent-foreground: oklch(0.13 0 0);
+  --sidebar-border: oklch(0.88 0 0);
+  --sidebar-ring: oklch(0.527 0.183 142.5);
+}
+
+/* ====================================
+   DARK MODE — Dr. Pesos Primary
+   Deep charcoal #0A0A0A / #111, green + purple neon accents
+   ==================================== */
+.dark {
+  --background: oklch(0.08 0 0);          /* #0A0A0A */
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.11 0 0);                /* #111 */
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.11 0 0);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.527 0.183 142.5);   /* Brand green */
+  --primary-foreground: oklch(0.08 0 0);
+  --secondary: oklch(0.16 0 0);
+  --secondary-foreground: oklch(0.95 0 0);
+  --muted: oklch(0.16 0 0);
+  --muted-foreground: oklch(0.55 0 0);
+  --accent: oklch(0.65 0.25 294);        /* Brand purple */
+  --accent-foreground: oklch(0.95 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.527 0.183 142.5);
+  --chart-1: oklch(0.527 0.183 142.5);
+  --chart-2: oklch(0.65 0.25 294);
+  --chart-3: oklch(0.65 0.15 200);
+  --chart-4: oklch(0.8 0.15 80);
+  --chart-5: oklch(0.7 0.2 50);
+  --sidebar: oklch(0.11 0 0);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: oklch(0.527 0.183 142.5);
+  --sidebar-primary-foreground: oklch(0.08 0 0);
+  --sidebar-accent: oklch(0.16 0 0);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.527 0.183 142.5);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  /* Default to dark mode for Dr. Pesos brand */
+  html {
+    color-scheme: dark;
+  }
+}
+
+/* ====================================
+   CUSTOM UTILITIES
+   ==================================== */
+@layer utilities {
+  /* Neon glow effects for brand accents */
+  .glow-green {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3), 0 0 40px rgba(34, 197, 94, 0.1);
+  }
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(168, 85, 247, 0.1);
+  }
+  .text-glow-green {
+    text-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+  }
+  .gradient-brand {
+    background: linear-gradient(135deg, #22C55E 0%, #A855F7 100%);
+  }
+  .gradient-brand-text {
+    background: linear-gradient(135deg, #22C55E 0%, #A855F7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  /* Chat message fade-in */
+  .message-fade-in {
+    animation: messageFadeIn 0.3s ease-out;
+  }
+  @keyframes messageFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
