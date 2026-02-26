@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getAnthropicClient, CLAUDE_MODEL, MAX_TOKENS } from "@/lib/ai/anthropic";
 import { DR_PESOS_SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
+import { retrieveKnowledge, formatKnowledgeContext } from "@/lib/knowledge-base/retrieve";
 import { createServerClient } from "@supabase/ssr";
 import { checkAndIncrementQuestion } from "@/lib/supabase/queries";
 import { NextRequest } from "next/server";
@@ -101,8 +102,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Build system prompt with optional grow context ───────────────
-    let systemPrompt = DR_PESOS_SYSTEM_PROMPT;
+    // ── RAG: retrieve relevant knowledge for the last user message ──────
+    const lastUserMessage = messages.filter((m) => m.role === "user").pop();
+    const queryText =
+      typeof lastUserMessage?.content === "string"
+        ? lastUserMessage.content
+        : (lastUserMessage?.content as Array<{ text?: string }>)
+            ?.map((b) => b.text ?? "")
+            .join(" ") ?? "";
+
+    const knowledgeChunks = await retrieveKnowledge(queryText, 3);
+    const knowledgeContext = formatKnowledgeContext(knowledgeChunks);
+
+    // ── Build system prompt with RAG context + optional grow context ─────
+    let systemPrompt = DR_PESOS_SYSTEM_PROMPT + knowledgeContext;
     if (growContext) {
       systemPrompt += `\n\n====================================================================
 USER'S CURRENT GROW CONTEXT
