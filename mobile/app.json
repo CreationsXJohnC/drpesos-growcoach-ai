@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "Dr. Pesos Grow Coach AI",
+    "slug": "drpesos-growcoach",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "drpesos",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.oricompany.drpesos",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Dr. Pesos needs camera access to photograph your plants for diagnosis.",
+        "NSPhotoLibraryUsageDescription": "Dr. Pesos needs photo library access to analyze plant photos.",
+        "NSUserNotificationsUsageDescription": "Dr. Pesos sends daily reminders for your grow tasks."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0A0A",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png"
+      },
+      "package": "com.oricompany.drpesos",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#22C55E"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Dr. Pesos to analyze your plant photos.",
+          "cameraPermission": "Allow Dr. Pesos to photograph your plants."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
