@@ -1,6 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
-  Leaf,
   CalendarDays,
   Camera,
   BarChart3,
@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Star,
   Building2,
+  Leaf,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,9 +24,19 @@ export default function HomePage() {
       {/* Navigation */}
       <nav className="sticky top-0 z-40 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 glow-green">
-              <Leaf className="h-5 w-5 text-primary" />
+          <div className="flex items-center gap-2.5">
+            <div className="relative h-9 w-9 overflow-hidden rounded-lg">
+              <Image
+                src="/logo-icon.png"
+                alt="Dr. Pesos"
+                fill
+                className="object-contain"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                priority
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-primary/10 [img+&]:hidden">
+                <Leaf className="h-5 w-5 text-primary" />
+              </div>
             </div>
             <span className="text-base font-bold">Dr. Pesos Grow Coach AI</span>
           </div>
@@ -60,6 +71,17 @@ export default function HomePage() {
         </div>
 
         <div className="relative mx-auto max-w-5xl text-center">
+          {/* Hero logo */}
+          <div className="mx-auto mb-8 relative h-24 w-64 sm:h-28 sm:w-80">
+            <Image
+              src="/logo.png"
+              alt="Dr. Pesos Grow Coach AI"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+
           <Badge
             variant="outline"
             className="mb-6 border-primary/30 bg-primary/5 text-primary"
@@ -282,7 +304,9 @@ export default function HomePage() {
       <footer className="border-t border-border/50 px-6 py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground md:flex-row">
           <div className="flex items-center gap-2">
-            <Leaf className="h-4 w-4 text-primary" />
+            <div className="relative h-5 w-5 shrink-0">
+              <Image src="/logo-icon.png" alt="Dr. Pesos" fill className="object-contain" />
+            </div>
             <span>Dr. Pesos Grow Coach AI · Ori Company · We Grow Life</span>
           </div>
           <p>For cultivation guidance only. Check local laws before growing.</p>

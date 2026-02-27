@@ -47,99 +47,101 @@
   --radius-4xl: calc(var(--radius) + 16px);
 
   /* Dr. Pesos Brand Colors */
+  --color-brand-blue: var(--brand-blue);
   --color-brand-green: var(--brand-green);
-  --color-brand-purple: var(--brand-purple);
+  --color-brand-dark-green: var(--brand-dark-green);
   --color-brand-dark: var(--brand-dark);
   --color-brand-darker: var(--brand-darker);
+  --color-brand-blue-glow: var(--brand-blue-glow);
   --color-brand-green-glow: var(--brand-green-glow);
-  --color-brand-purple-glow: var(--brand-purple-glow);
 }
 
 /* ====================================
-   LIGHT MODE — "Apple Clean"
-   Background: #F8F8F8, charcoal text, green accents
+   LIGHT MODE
+   Background: #f5f5f5, charcoal text, blue primary, green accent
    ==================================== */
 :root {
   --radius: 0.625rem;
 
   /* Dr. Pesos Brand */
-  --brand-green: #22C55E;
-  --brand-purple: #A855F7;
-  --brand-dark: #111111;
-  --brand-darker: #0A0A0A;
-  --brand-green-glow: rgba(34, 197, 94, 0.2);
-  --brand-purple-glow: rgba(168, 85, 247, 0.2);
+  --brand-blue: #0a3ec2;
+  --brand-green: #20AB5C;
+  --brand-dark-green: #1F5F43;
+  --brand-dark: #2a2a2a;
+  --brand-darker: #1e1e1e;
+  --brand-blue-glow: rgba(10, 62, 194, 0.2);
+  --brand-green-glow: rgba(32, 171, 92, 0.2);
 
   /* Light mode UI */
-  --background: oklch(0.976 0 0);        /* #F8F8F8 equivalent */
-  --foreground: oklch(0.13 0 0);          /* Deep charcoal */
+  --background: oklch(0.97 0 0);
+  --foreground: oklch(0.13 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.13 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.13 0 0);
-  --primary: oklch(0.527 0.183 142.5);   /* Brand green #22C55E */
-  --primary-foreground: oklch(1 0 0);
+  --primary: oklch(0.42 0.22 264);      /* #0a3ec2 Blue */
+  --primary-foreground: oklch(1 0 0);   /* White */
   --secondary: oklch(0.96 0 0);
   --secondary-foreground: oklch(0.13 0 0);
   --muted: oklch(0.96 0 0);
   --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.527 0.183 142.5);    /* Green accent */
+  --accent: oklch(0.64 0.155 152);      /* #20AB5C Green */
   --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.88 0 0);
   --input: oklch(0.88 0 0);
-  --ring: oklch(0.527 0.183 142.5);      /* Green ring */
-  --chart-1: oklch(0.527 0.183 142.5);   /* Green */
-  --chart-2: oklch(0.65 0.25 294);       /* Purple */
-  --chart-3: oklch(0.65 0.15 200);
+  --ring: oklch(0.42 0.22 264);         /* Blue ring */
+  --chart-1: oklch(0.42 0.22 264);      /* Blue */
+  --chart-2: oklch(0.64 0.155 152);     /* Green */
+  --chart-3: oklch(0.38 0.082 157);     /* Dark Green */
   --chart-4: oklch(0.8 0.15 80);
   --chart-5: oklch(0.7 0.2 50);
   --sidebar: oklch(0.97 0 0);
   --sidebar-foreground: oklch(0.13 0 0);
-  --sidebar-primary: oklch(0.527 0.183 142.5);
+  --sidebar-primary: oklch(0.42 0.22 264);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.95 0 0);
   --sidebar-accent-foreground: oklch(0.13 0 0);
   --sidebar-border: oklch(0.88 0 0);
-  --sidebar-ring: oklch(0.527 0.183 142.5);
+  --sidebar-ring: oklch(0.42 0.22 264);
 }
 
 /* ====================================
    DARK MODE — Dr. Pesos Primary
-   Deep charcoal #0A0A0A / #111, green + purple neon accents
+   Background: #2a2a2a dark gray, blue primary, green accent
    ==================================== */
 .dark {
-  --background: oklch(0.08 0 0);          /* #0A0A0A */
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.11 0 0);                /* #111 */
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.11 0 0);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.527 0.183 142.5);   /* Brand green */
-  --primary-foreground: oklch(0.08 0 0);
-  --secondary: oklch(0.16 0 0);
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.16 0 0);
-  --muted-foreground: oklch(0.55 0 0);
-  --accent: oklch(0.65 0.25 294);        /* Brand purple */
-  --accent-foreground: oklch(0.95 0 0);
+  --background: oklch(0.22 0 0);        /* #2a2a2a */
+  --foreground: oklch(0.97 0 0);        /* Near white */
+  --card: oklch(0.18 0 0);              /* #1e1e1e — slightly darker cards */
+  --card-foreground: oklch(0.97 0 0);
+  --popover: oklch(0.18 0 0);
+  --popover-foreground: oklch(0.97 0 0);
+  --primary: oklch(0.42 0.22 264);      /* #0a3ec2 Blue */
+  --primary-foreground: oklch(1 0 0);   /* White text on blue */
+  --secondary: oklch(0.26 0 0);
+  --secondary-foreground: oklch(0.97 0 0);
+  --muted: oklch(0.26 0 0);
+  --muted-foreground: oklch(0.58 0 0);
+  --accent: oklch(0.64 0.155 152);      /* #20AB5C Green */
+  --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.527 0.183 142.5);
-  --chart-1: oklch(0.527 0.183 142.5);
-  --chart-2: oklch(0.65 0.25 294);
-  --chart-3: oklch(0.65 0.15 200);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 11%);
+  --ring: oklch(0.42 0.22 264);
+  --chart-1: oklch(0.42 0.22 264);
+  --chart-2: oklch(0.64 0.155 152);
+  --chart-3: oklch(0.38 0.082 157);
   --chart-4: oklch(0.8 0.15 80);
   --chart-5: oklch(0.7 0.2 50);
-  --sidebar: oklch(0.11 0 0);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.527 0.183 142.5);
-  --sidebar-primary-foreground: oklch(0.08 0 0);
-  --sidebar-accent: oklch(0.16 0 0);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.527 0.183 142.5);
+  --sidebar: oklch(0.18 0 0);
+  --sidebar-foreground: oklch(0.97 0 0);
+  --sidebar-primary: oklch(0.42 0.22 264);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.26 0 0);
+  --sidebar-accent-foreground: oklch(0.97 0 0);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.42 0.22 264);
 }
 
 @layer base {
@@ -159,21 +161,23 @@
    CUSTOM UTILITIES
    ==================================== */
 @layer utilities {
-  /* Neon glow effects for brand accents */
+  /* Primary glow — Blue (#0a3ec2) — used on CTA buttons and featured cards */
   .glow-green {
-    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3), 0 0 40px rgba(34, 197, 94, 0.1);
+    box-shadow: 0 0 20px rgba(10, 62, 194, 0.4), 0 0 40px rgba(10, 62, 194, 0.15);
   }
+  /* Accent glow — Green (#20AB5C) — used on accent/diagnosis elements */
   .glow-purple {
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(168, 85, 247, 0.1);
+    box-shadow: 0 0 20px rgba(32, 171, 92, 0.35), 0 0 40px rgba(32, 171, 92, 0.12);
   }
   .text-glow-green {
-    text-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+    text-shadow: 0 0 20px rgba(10, 62, 194, 0.5);
   }
+  /* Brand gradient: Green → Blue */
   .gradient-brand {
-    background: linear-gradient(135deg, #22C55E 0%, #A855F7 100%);
+    background: linear-gradient(135deg, #20AB5C 0%, #0a3ec2 100%);
   }
   .gradient-brand-text {
-    background: linear-gradient(135deg, #22C55E 0%, #A855F7 100%);
+    background: linear-gradient(135deg, #20AB5C 0%, #0a3ec2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

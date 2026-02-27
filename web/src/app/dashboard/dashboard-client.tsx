@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AiChat } from "@/components/ai-chat";
@@ -63,10 +64,10 @@ const TIER_LABELS: Record<string, string> = {
 };
 
 const TIER_COLORS: Record<string, string> = {
-  free: "border-yellow-400/30 text-yellow-400",
+  free: "border-accent/40 text-accent",
   grower_monthly: "border-primary/30 text-primary",
-  commercial_monthly: "border-purple-400/30 text-purple-400",
-  lifetime: "border-orange-400/30 text-orange-400",
+  commercial_monthly: "border-primary/50 text-primary",
+  lifetime: "border-accent/50 text-accent",
 };
 
 export default function DashboardClient({
@@ -98,9 +99,10 @@ return (
       {/* Header */}
       <div className="sticky top-0 z-30 border-b border-border/50 bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-              <Leaf className="h-4 w-4 text-primary" />
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="relative h-7 w-7 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center">
+              <Image src="/logo-icon.png" alt="Dr. Pesos" fill className="object-contain p-0.5" />
+              <Leaf className="h-4 w-4 text-primary absolute" />
             </div>
             <span className="text-sm font-semibold hidden sm:block">
               Dr. Pesos Grow Coach AI
@@ -149,7 +151,7 @@ return (
             className={cn(
               "mb-6 rounded-xl border p-4",
               trialActive
-                ? "border-yellow-400/30 bg-yellow-400/5"
+                ? "border-accent/30 bg-accent/5"
                 : "border-destructive/30 bg-destructive/5"
             )}
           >
@@ -158,13 +160,13 @@ return (
                 <Clock
                   className={cn(
                     "h-5 w-5",
-                    trialActive ? "text-yellow-400" : "text-destructive"
+                    trialActive ? "text-accent" : "text-destructive"
                   )}
                 />
                 <div>
                   {trialActive ? (
                     <>
-                      <p className="text-sm font-semibold text-yellow-400">
+                      <p className="text-sm font-semibold text-accent">
                         Free trial — {Math.floor(trialHoursRemaining)}h{" "}
                         {Math.floor((trialHoursRemaining % 1) * 60)}m remaining
                       </p>

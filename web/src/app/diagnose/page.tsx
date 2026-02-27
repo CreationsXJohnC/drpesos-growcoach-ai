@@ -31,15 +31,15 @@ interface DiagnosisResult {
 const SEVERITY_CONFIG = {
   healthy: {
     label: "Looking Healthy",
-    color: "text-green-400",
-    border: "border-green-400/30 bg-green-400/5",
-    icon: <CheckCircle2 className="h-4 w-4 text-green-400" />,
+    color: "text-accent",
+    border: "border-accent/30 bg-accent/5",
+    icon: <CheckCircle2 className="h-4 w-4 text-accent" />,
   },
   minor: {
     label: "Minor Issue",
-    color: "text-yellow-400",
-    border: "border-yellow-400/30 bg-yellow-400/5",
-    icon: <Lightbulb className="h-4 w-4 text-yellow-400" />,
+    color: "text-primary",
+    border: "border-primary/30 bg-primary/5",
+    icon: <Lightbulb className="h-4 w-4 text-primary" />,
   },
   moderate: {
     label: "Needs Attention",
@@ -223,7 +223,7 @@ Start your response with a severity assessment: HEALTHY, MINOR, MODERATE, or SEV
                 Dashboard
               </Button>
             </Link>
-            <Badge variant="outline" className="border-purple-400/30 text-purple-400 text-xs">
+            <Badge variant="outline" className="border-accent/30 text-accent text-xs">
               <Camera className="mr-1 h-3 w-3" />
               Plant Diagnosis
             </Badge>

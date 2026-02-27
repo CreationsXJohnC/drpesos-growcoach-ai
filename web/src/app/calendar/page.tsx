@@ -37,13 +37,13 @@ interface CalendarData {
 }
 
 const STAGE_COLORS: Record<string, string> = {
-  germination: "text-yellow-400",
-  seedling: "text-green-300",
-  vegetative: "text-green-400",
-  flower: "text-purple-400",
-  harvest: "text-orange-400",
-  dry: "text-blue-400",
-  cure: "text-cyan-400",
+  germination: "text-accent",
+  seedling: "text-accent",
+  vegetative: "text-accent",
+  flower: "text-primary",
+  harvest: "text-accent",
+  dry: "text-primary",
+  cure: "text-primary",
 };
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
@@ -183,7 +183,7 @@ export default function CalendarPage() {
                       <div className="flex items-center gap-2">
                         <Progress value={wPct} className="h-1 flex-1" />
                         {week.defoliationScheduled && (
-                          <Scissors className="h-3 w-3 text-purple-400 shrink-0" />
+                          <Scissors className="h-3 w-3 text-accent shrink-0" />
                         )}
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">
@@ -215,7 +215,7 @@ export default function CalendarPage() {
                     {currentWeek.stage}
                   </Badge>
                   {currentWeek.defoliationScheduled && (
-                    <Badge variant="outline" className="border-purple-400/30 text-purple-400">
+                    <Badge variant="outline" className="border-accent/30 text-accent">
                       <Scissors className="mr-1 h-3 w-3" />
                       Defoliation Week
                     </Badge>
@@ -270,10 +270,10 @@ export default function CalendarPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <EnvStat icon={<Thermometer className="h-4 w-4 text-orange-400" />} label="Temperature" value={currentWeek.envTargets.tempF} />
-                    <EnvStat icon={<Droplets className="h-4 w-4 text-blue-400" />} label="Humidity (RH)" value={currentWeek.envTargets.rh} />
-                    <EnvStat icon={<Zap className="h-4 w-4 text-yellow-400" />} label="VPD" value={currentWeek.envTargets.vpd} />
-                    <EnvStat icon={<Sun className="h-4 w-4 text-yellow-300" />} label="PPFD" value={currentWeek.envTargets.ppfd} />
+                    <EnvStat icon={<Thermometer className="h-4 w-4 text-accent" />} label="Temperature" value={currentWeek.envTargets.tempF} />
+                    <EnvStat icon={<Droplets className="h-4 w-4 text-primary" />} label="Humidity (RH)" value={currentWeek.envTargets.rh} />
+                    <EnvStat icon={<Zap className="h-4 w-4 text-primary" />} label="VPD" value={currentWeek.envTargets.vpd} />
+                    <EnvStat icon={<Sun className="h-4 w-4 text-accent" />} label="PPFD" value={currentWeek.envTargets.ppfd} />
                   </div>
                   <div className="mt-4 rounded-lg bg-muted/50 p-3">
                     <p className="text-xs font-medium mb-1">Light Schedule</p>

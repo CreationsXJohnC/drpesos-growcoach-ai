@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Image from "next/image";
 import {
   MessageCircle,
   X,
@@ -180,10 +181,13 @@ export function AiChat() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-primary-foreground shadow-lg glow-green hover:scale-105 transition-all duration-200"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-primary px-4 py-3 text-primary-foreground shadow-lg glow-green hover:scale-105 transition-all duration-200"
         aria-label="Open Dr. Pesos Grow Coach AI"
       >
-        <Leaf className="h-5 w-5" />
+        <div className="relative h-5 w-5">
+          <Image src="/logo-icon.png" alt="Dr. Pesos" fill className="object-contain" />
+          <Leaf className="h-5 w-5 absolute inset-0 [img+&]:hidden" />
+        </div>
         <span className="text-sm font-semibold hidden sm:block">Ask Dr. Pesos</span>
       </button>
     );
@@ -203,8 +207,15 @@ export function AiChat() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3 bg-card rounded-t-2xl max-sm:rounded-none">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 glow-green">
-            <Leaf className="h-4 w-4 text-primary" />
+          <div className="relative h-8 w-8 overflow-hidden rounded-full bg-primary/10 flex items-center justify-center">
+            <Image
+              src="/logo-icon.png"
+              alt="Dr. Pesos"
+              fill
+              className="object-contain p-0.5"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+            <Leaf className="h-4 w-4 text-primary absolute" />
           </div>
           <div>
             <p className="text-sm font-semibold">Dr. Pesos Grow Coach AI</p>

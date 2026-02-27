@@ -92,7 +92,7 @@ const TIERS: PricingTier[] = [
       "Cancel anytime",
     ],
     cta: "Get Commercial Access",
-    icon: <Building2 className="h-5 w-5 text-purple-400" />,
+    icon: <Building2 className="h-5 w-5 text-accent" />,
   },
   {
     id: "lifetime",
