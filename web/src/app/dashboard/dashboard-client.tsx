@@ -101,8 +101,14 @@ return (
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="relative h-7 w-7 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center">
-              <Image src="/logo-icon.png" alt="Dr. Pesos" fill className="object-contain p-0.5" />
-              <Leaf className="h-4 w-4 text-primary absolute" />
+              <Leaf className="h-4 w-4 text-primary" />
+              <Image
+                src="/Dr.%20Pesos%20GreenTee%20notext.png"
+                alt="Dr. Pesos"
+                fill
+                className="object-contain p-0.5"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
             </div>
             <span className="text-sm font-semibold hidden sm:block">
               Dr. Pesos Grow Coach AI

@@ -27,16 +27,12 @@ export default function HomePage() {
           <div className="flex items-center gap-2.5">
             <div className="relative h-9 w-9 overflow-hidden rounded-lg">
               <Image
-                src="/logo-icon.png"
+                src="/Dr.%20Pesos%20GreenTee%20notext.png"
                 alt="Dr. Pesos"
                 fill
                 className="object-contain"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 priority
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-primary/10 [img+&]:hidden">
-                <Leaf className="h-5 w-5 text-primary" />
-              </div>
             </div>
             <span className="text-base font-bold">Dr. Pesos Grow Coach AI</span>
           </div>
@@ -70,54 +66,74 @@ export default function HomePage() {
           <div className="absolute right-0 top-1/3 h-100 w-100 rounded-full bg-accent/5 blur-3xl" />
         </div>
 
-        <div className="relative mx-auto max-w-5xl text-center">
-          {/* Hero logo */}
-          <div className="mx-auto mb-8 relative h-24 w-64 sm:h-28 sm:w-80">
-            <Image
-              src="/logo.png"
-              alt="Dr. Pesos Grow Coach AI"
-              fill
-              className="object-contain"
-              priority
-            />
+        <div className="relative mx-auto max-w-6xl">
+          <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:gap-16">
+
+            {/* Left: Text content */}
+            <div className="flex-1 text-center lg:text-left">
+              {/* Dr. Pesos wordmark */}
+              <div className="mx-auto mb-6 relative h-14 w-52 lg:mx-0">
+                <Image
+                  src="/Dr.%20Pesos%20Text.png"
+                  alt="Dr. Pesos"
+                  fill
+                  className="object-contain object-center lg:object-left"
+                  priority
+                />
+              </div>
+
+              <Badge
+                variant="outline"
+                className="mb-6 border-primary/30 bg-primary/5 text-primary"
+              >
+                <Zap className="mr-1.5 h-3 w-3" />
+                Powered by Ori Company · We Grow Life
+              </Badge>
+
+              <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight sm:text-6xl lg:text-7xl">
+                Grow Smarter With{" "}
+                <span className="gradient-brand-text">Dr. Pesos</span>{" "}
+                Grow Coach AI
+              </h1>
+
+              <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground sm:text-xl lg:mx-0">
+                Your personal AI cultivation assistant — diagnosing plant issues,
+                building optimized grow plans, and guiding you through every stage
+                from seed to cure. Beginner-friendly, pro-level insights. Available
+                24/7.
+              </p>
+
+              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
+                <Button size="lg" className="glow-green text-base px-8" asChild>
+                  <Link href="/auth/signup">
+                    Start Your Free 48-Hour Trial
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" className="text-base px-8" asChild>
+                  <Link href="/calendar/new">Build Your Grow Calendar</Link>
+                </Button>
+              </div>
+
+              <p className="mt-4 text-sm text-muted-foreground text-center lg:text-left">
+                No credit card required for trial · 3 questions/day · Full access after upgrade
+              </p>
+            </div>
+
+            {/* Right: Dr. Pesos character (desktop only) */}
+            <div className="hidden lg:flex lg:shrink-0 lg:items-center lg:justify-center">
+              <div className="relative h-120 w-90">
+                <Image
+                  src="/Dr.%20Pesos%20PeaceSign%20notext.png"
+                  alt="Dr. Pesos"
+                  fill
+                  className="object-contain drop-shadow-2xl"
+                  priority
+                />
+              </div>
+            </div>
+
           </div>
-
-          <Badge
-            variant="outline"
-            className="mb-6 border-primary/30 bg-primary/5 text-primary"
-          >
-            <Zap className="mr-1.5 h-3 w-3" />
-            Powered by Ori Company · We Grow Life
-          </Badge>
-
-          <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight sm:text-6xl lg:text-7xl">
-            Grow Smarter With{" "}
-            <span className="gradient-brand-text">Dr. Pesos</span>{" "}
-            Grow Coach AI
-          </h1>
-
-          <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-            Your personal AI cultivation assistant — diagnosing plant issues,
-            building optimized grow plans, and guiding you through every stage
-            from seed to cure. Beginner-friendly, pro-level insights. Available
-            24/7.
-          </p>
-
-          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button size="lg" className="glow-green text-base px-8" asChild>
-              <Link href="/auth/signup">
-                Start Your Free 48-Hour Trial
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="text-base px-8" asChild>
-              <Link href="/calendar/new">Build Your Grow Calendar</Link>
-            </Button>
-          </div>
-
-          <p className="mt-4 text-sm text-muted-foreground">
-            No credit card required for trial · 3 questions/day · Full access after upgrade
-          </p>
         </div>
 
         {/* Hero chat preview */}
@@ -131,7 +147,14 @@ export default function HomePage() {
                 <div className="h-3 w-3 rounded-full bg-primary/60" />
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Leaf className="h-3.5 w-3.5 text-primary" />
+                <div className="relative h-4 w-4 overflow-hidden rounded-full">
+                  <Image
+                    src="/Dr.%20Pesos%20GreenTee%20notext.png"
+                    alt="Dr. Pesos"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
                 Dr. Pesos Grow Coach AI — powered by Claude
               </div>
             </div>
@@ -143,8 +166,13 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                  <Leaf className="h-4 w-4 text-primary" />
+                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
+                  <Image
+                    src="/Dr.%20Pesos%20GreenTee%20notext.png"
+                    alt="Dr. Pesos"
+                    fill
+                    className="object-contain p-0.5"
+                  />
                 </div>
                 <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-muted px-4 py-3 text-sm">
                   <p className="font-medium text-primary mb-1">Here&apos;s what your plant is telling us...</p>
@@ -304,10 +332,15 @@ export default function HomePage() {
       <footer className="border-t border-border/50 px-6 py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground md:flex-row">
           <div className="flex items-center gap-2">
-            <div className="relative h-5 w-5 shrink-0">
-              <Image src="/logo-icon.png" alt="Dr. Pesos" fill className="object-contain" />
+            <div className="relative h-16 w-32 shrink-0">
+              <Image
+                src="/Dr.%20Pesos%20Text.png"
+                alt="Dr. Pesos"
+                fill
+                className="object-contain object-left"
+              />
             </div>
-            <span>Dr. Pesos Grow Coach AI · Ori Company · We Grow Life</span>
+            <span>· Ori Company · We Grow Life</span>
           </div>
           <p>For cultivation guidance only. Check local laws before growing.</p>
           <div className="flex gap-4">
