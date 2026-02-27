@@ -27,7 +27,7 @@ import {
   Eye,
   Sprout,
 } from "lucide-react";
-import type { WeekPlan, DailyTask, CalendarData } from "@/types/grow";
+import type { DailyTask, CalendarData } from "@/types/grow";
 import { cn } from "@/lib/utils";
 
 interface CalendarWithMeta extends CalendarData {

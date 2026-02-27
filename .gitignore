@@ -56,3 +56,8 @@ coverage/
 # Misc
 *.tsbuildinfo
 next-env.d.ts
+
+# Knowledge base PDFs — proprietary source documents, do not commit
+# Drop PDFs into these folders locally then run: npm run ingest-knowledge
+web/src/lib/knowledge-base/pdfs/**/*.pdf
+web/src/lib/knowledge-base/pdfs/*.pdf

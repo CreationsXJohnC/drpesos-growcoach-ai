@@ -1,6 +1,5 @@
 // RAG retrieval — embeds a query and fetches the top-N most relevant knowledge chunks
 
-import { getAnthropicClient } from "@/lib/ai/anthropic";
 import { createAdminClient } from "@/lib/supabase/server";
 
 export interface KnowledgeChunk {
