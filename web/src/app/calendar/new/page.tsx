@@ -89,10 +89,14 @@ export default function NewCalendarPage() {
       if (!res.ok) throw new Error("Failed to generate calendar");
       const calendar = await res.json();
 
-      // Store in sessionStorage for the calendar page to read
-      sessionStorage.setItem("growCalendar", JSON.stringify(calendar));
-      sessionStorage.setItem("growSetup", JSON.stringify(form));
-      router.push("/calendar");
+      if (calendar.id) {
+        router.push(`/calendar?id=${calendar.id}`);
+      } else {
+        // Unauthenticated / demo fallback — sessionStorage only
+        sessionStorage.setItem("growCalendar", JSON.stringify(calendar));
+        sessionStorage.setItem("growSetup", JSON.stringify(form));
+        router.push("/calendar");
+      }
     } catch (err) {
       console.error(err);
       setIsGenerating(false);

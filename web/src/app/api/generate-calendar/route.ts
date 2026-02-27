@@ -92,6 +92,25 @@ export async function POST(req: NextRequest) {
       throw new Error("Failed to parse grow calendar from AI response");
     }
 
+    // ── Save to Supabase (authenticated users only) ─────────────────
+    if (user && !demo) {
+      try {
+        const { saveGrowCalendar } = await import("@/lib/supabase/queries");
+        const saved = await saveGrowCalendar(
+          user.id,
+          setup as unknown as Record<string, unknown>,
+          calendarData.weeks,
+          calendarData.totalWeeks,
+          calendarData.estimatedHarvestDate
+        );
+        return NextResponse.json({ id: saved.id, ...calendarData });
+      } catch (saveError) {
+        console.error("Failed to save calendar to Supabase:", saveError);
+        // Return without ID — client falls back to redirect without ID
+        return NextResponse.json(calendarData);
+      }
+    }
+
     return NextResponse.json(calendarData);
   } catch (error) {
     console.error("Generate calendar error:", error);

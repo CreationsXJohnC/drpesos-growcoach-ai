@@ -54,6 +54,13 @@ export interface WeekPlan {
   drPesosNote: string;
 }
 
+// Shape returned by the generate-calendar API and stored in Supabase
+export interface CalendarData {
+  totalWeeks: number;
+  estimatedHarvestDate: string;
+  weeks: WeekPlan[];
+}
+
 export interface GrowCalendar {
   id: string;
   userId: string;
