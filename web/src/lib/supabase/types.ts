@@ -94,6 +94,23 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["grow_progress"]["Insert"]>;
         Relationships: [];
       };
+      demo_leads: {
+        Row: {
+          id: string;
+          email: string;
+          name: string | null;
+          company: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          name?: string | null;
+          company?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["demo_leads"]["Insert"]>;
+        Relationships: [];
+      };
       knowledge_sources: {
         Row: {
           id: string;

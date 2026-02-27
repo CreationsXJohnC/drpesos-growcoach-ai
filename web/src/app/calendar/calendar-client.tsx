@@ -38,6 +38,7 @@ interface CalendarWithMeta extends CalendarData {
 interface Props {
   calendar: CalendarWithMeta | null;
   initialCompleted: string[];
+  isDemo?: boolean;
 }
 
 const STAGE_COLORS: Record<string, string> = {
@@ -61,7 +62,7 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   harvest: <Leaf className="h-3.5 w-3.5" />,
 };
 
-export default function CalendarClient({ calendar: serverCalendar, initialCompleted }: Props) {
+export default function CalendarClient({ calendar: serverCalendar, initialCompleted, isDemo = false }: Props) {
   const router = useRouter();
   const [calendar, setCalendar] = useState<CalendarWithMeta | null>(serverCalendar);
   const [selectedWeek, setSelectedWeek] = useState(0);
@@ -105,6 +106,13 @@ export default function CalendarClient({ calendar: serverCalendar, initialComple
     });
   }, [calendar, setGrowContext]);
 
+  // Demo mode: open chat automatically after a short delay
+  useEffect(() => {
+    if (!isDemo) return;
+    const t = setTimeout(() => setOpen(true), 1200);
+    return () => clearTimeout(t);
+  }, [isDemo, setOpen]);
+
   if (!calendar) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background dark">
@@ -123,7 +131,7 @@ export default function CalendarClient({ calendar: serverCalendar, initialComple
   const weekProgress = totalTasks > 0 ? (doneCount / totalTasks) * 100 : 0;
 
   const saveProgress = (updatedTasks: Set<string>) => {
-    if (!calendar.id) return; // skip for sessionStorage / demo calendars
+    if (!calendar.id || isDemo) return;
 
     // Debounce: wait 800ms after last toggle before saving
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -167,6 +175,22 @@ export default function CalendarClient({ calendar: serverCalendar, initialComple
   return (
     <div className="min-h-screen bg-background text-foreground dark">
       <AiChat />
+
+      {/* Demo mode banner */}
+      {isDemo && (
+        <div className="sticky top-0 z-40 bg-primary/10 border-b border-primary/30 px-6 py-2.5">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+            <p className="text-xs text-primary font-medium">
+              <span className="font-bold">Live Demo</span> — This is a sample 14-week grow calendar. Sign up for free to generate your personalized plan.
+            </p>
+            <Link href="/auth/signup">
+              <Button size="sm" className="glow-green h-7 text-xs px-3 shrink-0">
+                Start Free Trial
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="sticky top-0 z-30 border-b border-border/50 bg-background/90 backdrop-blur-xl">

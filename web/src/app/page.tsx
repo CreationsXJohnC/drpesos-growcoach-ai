@@ -113,7 +113,7 @@ export default function HomePage() {
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" className="text-base px-8" asChild>
-                  <Link href="/calendar/new">Build Your Grow Calendar</Link>
+                  <Link href="/demo-access">View Live Demo</Link>
                 </Button>
               </div>
 

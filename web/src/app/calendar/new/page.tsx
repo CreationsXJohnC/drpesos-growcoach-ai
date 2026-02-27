@@ -17,6 +17,7 @@ import type {
   StrainType,
   GrowMedium,
   LightType,
+  NutrientType,
   GrowGoal,
 } from "@/types/grow";
 import { cn } from "@/lib/utils";
@@ -25,8 +26,11 @@ import Link from "next/link";
 interface GrowSetupForm {
   experienceLevel: ExperienceLevel | null;
   strainType: StrainType | null;
+  strainGenetics: string;
   medium: GrowMedium | null;
   lightType: LightType | null;
+  lightWattage: string;
+  nutrientType: NutrientType | null;
   spaceSize: string;
   startDate: string;
   goals: GrowGoal[];
@@ -37,9 +41,12 @@ const STEPS = [
   "Strain Type",
   "Grow Medium",
   "Lighting",
+  "Nutrients",
   "Setup Details",
   "Goals",
 ];
+
+const DISCHARGE_WATTAGES = ["400W", "600W", "650W", "750W", "1000W", "1150W"];
 
 export default function NewCalendarPage() {
   const router = useRouter();
@@ -48,8 +55,11 @@ export default function NewCalendarPage() {
   const [form, setForm] = useState<GrowSetupForm>({
     experienceLevel: null,
     strainType: null,
+    strainGenetics: "",
     medium: null,
     lightType: null,
+    lightWattage: "",
+    nutrientType: null,
     spaceSize: "4x4",
     startDate: new Date().toISOString().split("T")[0],
     goals: ["quality"],
@@ -57,14 +67,20 @@ export default function NewCalendarPage() {
 
   const progress = ((step + 1) / STEPS.length) * 100;
 
+  const isDischargeLight =
+    form.lightType === "hps" ||
+    form.lightType === "hid" ||
+    form.lightType === "cmh";
+
   const canAdvance = () => {
     switch (step) {
       case 0: return form.experienceLevel !== null;
       case 1: return form.strainType !== null;
       case 2: return form.medium !== null;
-      case 3: return form.lightType !== null;
-      case 4: return form.spaceSize && form.startDate;
-      case 5: return form.goals.length > 0;
+      case 3: return form.lightType !== null && form.lightWattage.trim() !== "";
+      case 4: return form.nutrientType !== null;
+      case 5: return form.spaceSize !== "" && form.startDate !== "";
+      case 6: return form.goals.length > 0;
       default: return false;
     }
   };
@@ -78,8 +94,11 @@ export default function NewCalendarPage() {
         body: JSON.stringify({
           experienceLevel: form.experienceLevel,
           strainType: form.strainType,
+          strainGenetics: form.strainGenetics,
           medium: form.medium,
           lightType: form.lightType,
+          lightWattage: form.lightWattage,
+          nutrientType: form.nutrientType,
           spaceSize: form.spaceSize,
           startDate: form.startDate,
           goals: form.goals,
@@ -92,7 +111,6 @@ export default function NewCalendarPage() {
       if (calendar.id) {
         router.push(`/calendar?id=${calendar.id}`);
       } else {
-        // Unauthenticated / demo fallback — sessionStorage only
         sessionStorage.setItem("growCalendar", JSON.stringify(calendar));
         sessionStorage.setItem("growSetup", JSON.stringify(form));
         router.push("/calendar");
@@ -135,6 +153,8 @@ export default function NewCalendarPage() {
       {/* Step Content */}
       <div className="flex-1 px-6 py-8">
         <div className="mx-auto max-w-2xl">
+
+          {/* Step 0 — Experience Level */}
           {step === 0 && (
             <StepCard
               title="What's your experience level?"
@@ -152,24 +172,47 @@ export default function NewCalendarPage() {
             </StepCard>
           )}
 
+          {/* Step 1 — Strain Type + Genetics */}
           {step === 1 && (
             <StepCard
-              title="What type of strain are you growing?"
-              subtitle="This determines your light schedule, grow cycle length, and defoliation timing."
+              title="What are you growing?"
+              subtitle="Select your strain type, then enter the specific strain name or genetics for personalized guidance."
             >
-              <OptionGrid
-                options={[
-                  { value: "indica", label: "Indica", desc: "Shorter flower time (~8 weeks). Dense, bushy structure." },
-                  { value: "sativa", label: "Sativa", desc: "Longer flower time (~10-12 weeks). Tall, stretchy growth." },
-                  { value: "hybrid", label: "Hybrid", desc: "Balanced characteristics. Most common commercial strains." },
-                  { value: "autoflower", label: "Auto-flower", desc: "No light schedule change needed. Shorter total cycle (~10-12 weeks)." },
-                ]}
-                selected={form.strainType}
-                onSelect={(v) => setForm({ ...form, strainType: v as StrainType })}
-              />
+              <div className="space-y-6">
+                <OptionGrid
+                  options={[
+                    { value: "indica_dominant", label: "Indica-Dominant", desc: "Shorter flower time (~8 weeks). Dense, bushy structure. Heavy body effect. Great for yield." },
+                    { value: "sativa_dominant", label: "Sativa-Dominant", desc: "Longer flower time (~10–12 weeks). Tall, stretchy growth. Cerebral effect. Longer cure recommended." },
+                    { value: "hybrid", label: "Hybrid", desc: "Balanced indica/sativa characteristics. Most common commercial strains. Versatile training response." },
+                    { value: "autoflower", label: "Auto-Flower", desc: "No light schedule change needed. Completes full cycle in 10–12 weeks. Ruderalis genetics." },
+                  ]}
+                  selected={form.strainType}
+                  onSelect={(v) => setForm({ ...form, strainType: v as StrainType })}
+                />
+
+                {form.strainType && (
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium">
+                      Strain Name / Genetics{" "}
+                      <span className="text-xs font-normal text-muted-foreground">(optional but recommended)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={form.strainGenetics}
+                      onChange={(e) => setForm({ ...form, strainGenetics: e.target.value })}
+                      placeholder="e.g. Gorilla Glue #4, OG Kush × White Widow, Bruce Banner, Wedding Cake"
+                      className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+                    />
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Enter the strain name, breeder cross, or parent genetics. Dr. Pesos uses this to calibrate flower time, stretch prediction, terpene profile, and harvest timing specific to your genetics.
+                    </p>
+                  </div>
+                )}
+              </div>
             </StepCard>
           )}
 
+          {/* Step 2 — Grow Medium */}
           {step === 2 && (
             <StepCard
               title="What grow medium are you using?"
@@ -177,10 +220,12 @@ export default function NewCalendarPage() {
             >
               <OptionGrid
                 options={[
-                  { value: "soil", label: "Soil", desc: "Most forgiving for beginners. pH target: 6.0–7.0. Slower feed uptake." },
-                  { value: "coco", label: "Coco Coir", desc: "Fast growth, high yield potential. pH target: 5.5–6.5. Daily watering." },
-                  { value: "hydro", label: "Hydroponics", desc: "Fastest growth. pH target: 5.5–6.5. Requires precise EC monitoring." },
-                  { value: "rockwool", label: "Rockwool", desc: "Popular in commercial settings. pH target: 5.5–6.5. Sterile substrate." },
+                  { value: "soil", label: "Soil", desc: "Most forgiving for beginners. pH 6.0–7.0. Natural buffer, slower feed uptake." },
+                  { value: "living_soil", label: "Living Soil", desc: "Amended super soil with beneficial microbes. Minimal synthetic inputs. pH 6.2–7.0." },
+                  { value: "coco", label: "Coco Coir", desc: "Fast growth, high yield potential. pH 5.5–6.5. Daily fertigation required." },
+                  { value: "hydro", label: "Hydroponics (DWC / NFT)", desc: "Fastest growth. pH 5.5–6.5. Precise EC monitoring essential." },
+                  { value: "aeroponics", label: "Aeroponics", desc: "Roots misted in air. Maximum oxygen and uptake speed. Advanced setup required." },
+                  { value: "rockwool", label: "Rockwool / Stonewool", desc: "Common in commercial setups. pH 5.5–6.5. Sterile inert substrate." },
                 ]}
                 selected={form.medium}
                 onSelect={(v) => setForm({ ...form, medium: v as GrowMedium })}
@@ -188,28 +233,135 @@ export default function NewCalendarPage() {
             </StepCard>
           )}
 
+          {/* Step 3 — Lighting */}
           {step === 3 && (
             <StepCard
               title="What type of lights are you running?"
-              subtitle="Your light type affects PPFD targets, heat management, and energy efficiency."
+              subtitle="Your light type and wattage determine PPFD targets, heat load, and canopy distance."
             >
-              <OptionGrid
-                options={[
-                  { value: "led", label: "LED", desc: "Energy-efficient, runs cooler. Can push higher PPFD with less heat stress." },
-                  { value: "hps", label: "HPS", desc: "Industry standard, proven results. More heat — manage your temps accordingly." },
-                  { value: "cmh", label: "CMH / LEC", desc: "Full-spectrum, great terpene production. Excellent for quality-focused grows." },
-                  { value: "fluorescent", label: "Fluorescent (T5)", desc: "Best for seedlings and clones. Low intensity for early stages." },
-                ]}
-                selected={form.lightType}
-                onSelect={(v) => setForm({ ...form, lightType: v as LightType })}
-              />
+              <div className="space-y-6">
+                <div>
+                  <p className="mb-3 text-sm font-medium text-muted-foreground">Light Type</p>
+                  <OptionGrid
+                    options={[
+                      { value: "led", label: "LED", desc: "Light-Emitting Diode. Energy-efficient, low heat, adjustable spectrum and intensity." },
+                      { value: "hps", label: "HPS", desc: "High Pressure Sodium. Proven yields, intense heat output, orange/red spectrum." },
+                      { value: "hid", label: "HID", desc: "High-Intensity Discharge. Broad category covering HPS and Metal Halide. Industry standard." },
+                      { value: "cmh", label: "CMH", desc: "Ceramic Metal Halide. Full-spectrum output — excellent terpene expression and quality finish." },
+                      { value: "fluorescent", label: "Fluorescent (T5)", desc: "Low-intensity fluorescent tubes. Best for seedlings, clones, and propagation stages." },
+                      { value: "tungsten", label: "Tungsten / Incandescent", desc: "Traditional incandescent bulbs. Low efficiency, warm spectrum. Supplemental use only." },
+                      { value: "under_canopy", label: "Under Canopy Lighting", desc: "Supplemental lighting below the main canopy to light lower bud sites and increase overall yield." },
+                    ]}
+                    selected={form.lightType}
+                    onSelect={(v) => setForm({ ...form, lightType: v as LightType, lightWattage: "" })}
+                  />
+                </div>
+
+                {form.lightType && (
+                  <div>
+                    <p className="mb-3 text-sm font-medium text-muted-foreground">
+                      {form.lightType === "led"
+                        ? "LED Wattage (actual draw watts from wall)"
+                        : "Light Wattage"}
+                    </p>
+
+                    {isDischargeLight ? (
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                        {DISCHARGE_WATTAGES.map((w) => (
+                          <button
+                            key={w}
+                            onClick={() => setForm({ ...form, lightWattage: w })}
+                            className={cn(
+                              "rounded-lg border px-3 py-2 text-sm font-medium transition-all",
+                              form.lightWattage === w
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                            )}
+                          >
+                            {w}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div>
+                        <input
+                          type="text"
+                          value={form.lightWattage}
+                          onChange={(e) => setForm({ ...form, lightWattage: e.target.value })}
+                          placeholder={
+                            form.lightType === "led"
+                              ? "e.g. 480W, 640W, 1000W"
+                              : form.lightType === "fluorescent"
+                              ? "e.g. 216W (4× 54W T5)"
+                              : "e.g. 300W"
+                          }
+                          className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+                        />
+                        <p className="mt-1.5 text-xs text-muted-foreground">
+                          {form.lightType === "led"
+                            ? "Enter the actual draw wattage from the wall, not the equivalent wattage in the product name."
+                            : "Enter the total wattage of your lighting setup."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </StepCard>
           )}
 
+          {/* Step 4 — Nutrients */}
           {step === 4 && (
             <StepCard
+              title="What type of nutrients are you using?"
+              subtitle="Your nutrient program determines feeding schedules, pH targets, and soil biology management."
+            >
+              <OptionGrid
+                options={[
+                  {
+                    value: "synthetic",
+                    label: "Synthetic / Salt-Based",
+                    desc: "Fast-acting, precise dosing. Examples: Advanced Nutrients, General Hydroponics, Flora Series, Jack's 3-2-1. Requires regular pH adjustment.",
+                  },
+                  {
+                    value: "organic",
+                    label: "Organic / Living",
+                    desc: "Slow-release, soil biology driven. Examples: BuildASoil, TLO, Craft Blend, ROLS inputs. pH often self-regulates in living soil.",
+                  },
+                ]}
+                selected={form.nutrientType}
+                onSelect={(v) => setForm({ ...form, nutrientType: v as NutrientType })}
+              />
+
+              {form.nutrientType && (
+                <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs text-muted-foreground space-y-1.5">
+                  {form.nutrientType === "synthetic" ? (
+                    <>
+                      <p className="font-medium text-primary">Synthetic program notes:</p>
+                      <p>• Dr. Pesos default schedule uses Advanced Nutrients base (Micro / Grow / Bloom)</p>
+                      <p>• pH targets: soil 6.0–7.0 · coco / hydro / rockwool 5.5–6.5</p>
+                      <p>• Weekly EC targets provided per grow stage in your calendar</p>
+                      <p>• Pre-harvest flush recommended for cleanest finish</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-medium text-primary">Organic program notes:</p>
+                      <p>• Top-dresses and compost teas replace liquid feeds — schedule included in calendar</p>
+                      <p>• pH self-regulates in active living soil (target 6.2–7.0)</p>
+                      <p>• Slow-release inputs need 7–10 days to become available — plan ahead</p>
+                      <p>• No chemical flush needed — organic finish is naturally clean</p>
+                    </>
+                  )}
+                </div>
+              )}
+            </StepCard>
+          )}
+
+          {/* Step 5 — Setup Details */}
+          {step === 5 && (
+            <StepCard
               title="Tell me about your setup"
-              subtitle="This helps calibrate plant counts, canopy targets, and environmental recommendations."
+              subtitle="This calibrates plant counts, canopy targets, and environmental recommendations."
             >
               <div className="space-y-5">
                 <div>
@@ -240,14 +392,15 @@ export default function NewCalendarPage() {
                     className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
-                    The date you plan to germinate or the date you started if mid-grow.
+                    The date you plan to germinate — or the date you started if you&apos;re mid-grow.
                   </p>
                 </div>
               </div>
             </StepCard>
           )}
 
-          {step === 5 && (
+          {/* Step 6 — Goals */}
+          {step === 6 && (
             <StepCard
               title="What are your grow goals?"
               subtitle="Select all that apply — Dr. Pesos will optimize your calendar accordingly."
@@ -282,16 +435,30 @@ export default function NewCalendarPage() {
                 })}
               </div>
 
-              {/* Summary card */}
+              {/* Full Summary */}
               <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
-                <p className="text-xs font-medium text-primary mb-2">Your Grow Setup Summary</p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <p className="text-xs font-medium text-primary mb-3">Your Full Grow Setup</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
                   <span>Experience: <strong className="text-foreground capitalize">{form.experienceLevel}</strong></span>
-                  <span>Strain: <strong className="text-foreground capitalize">{form.strainType}</strong></span>
-                  <span>Medium: <strong className="text-foreground capitalize">{form.medium}</strong></span>
-                  <span>Lights: <strong className="text-foreground uppercase">{form.lightType}</strong></span>
+                  <span>
+                    Strain:{" "}
+                    <strong className="text-foreground capitalize">
+                      {form.strainType?.replace("_", "-")}
+                      {form.strainGenetics && ` — ${form.strainGenetics}`}
+                    </strong>
+                  </span>
+                  <span>Medium: <strong className="text-foreground capitalize">{form.medium?.replace("_", " ")}</strong></span>
+                  <span>
+                    Light:{" "}
+                    <strong className="text-foreground uppercase">
+                      {form.lightType?.replace("_", " ")}
+                      {form.lightWattage && ` · ${form.lightWattage}`}
+                    </strong>
+                  </span>
+                  <span>Nutrients: <strong className="text-foreground capitalize">{form.nutrientType}</strong></span>
                   <span>Space: <strong className="text-foreground">{form.spaceSize} ft</strong></span>
                   <span>Start: <strong className="text-foreground">{form.startDate}</strong></span>
+                  <span>Goals: <strong className="text-foreground capitalize">{form.goals.join(", ")}</strong></span>
                 </div>
               </div>
             </StepCard>

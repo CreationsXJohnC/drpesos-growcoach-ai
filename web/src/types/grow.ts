@@ -1,9 +1,25 @@
 // Shared types for grow calendar (used by both web and mobile)
 
 export type ExperienceLevel = "beginner" | "intermediate" | "commercial";
-export type StrainType = "indica" | "sativa" | "hybrid" | "autoflower";
-export type GrowMedium = "soil" | "coco" | "hydro" | "rockwool";
-export type LightType = "hps" | "led" | "cmh" | "fluorescent";
+export type StrainType = "indica_dominant" | "sativa_dominant" | "hybrid" | "autoflower";
+export type GrowMedium =
+  | "soil"
+  | "living_soil"
+  | "coco"
+  | "hydro"
+  | "aeroponics"
+  | "rockwool";
+
+export type LightType =
+  | "led"
+  | "hps"
+  | "hid"
+  | "cmh"
+  | "fluorescent"
+  | "tungsten"
+  | "under_canopy";
+
+export type NutrientType = "synthetic" | "organic";
 export type GrowGoal = "yield" | "speed" | "quality";
 export type GrowStage =
   | "germination"
@@ -17,8 +33,11 @@ export type GrowStage =
 export interface GrowSetup {
   experienceLevel: ExperienceLevel;
   strainType: StrainType;
+  strainGenetics: string; // e.g. "OG Kush × White Widow", "Bruce Banner", "Gorilla Glue #4"
   medium: GrowMedium;
   lightType: LightType;
+  lightWattage: string; // e.g. "600W", "480W", "1000W"
+  nutrientType: NutrientType;
   spaceSize: string; // e.g. "4x4", "5x5", "10x10"
   startDate: string; // ISO date string
   currentStage?: GrowStage;

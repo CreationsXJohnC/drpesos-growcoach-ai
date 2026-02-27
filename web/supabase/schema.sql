@@ -211,3 +211,21 @@ CREATE TRIGGER set_profiles_updated_at
 CREATE TRIGGER set_grow_calendars_updated_at
   BEFORE UPDATE ON public.grow_calendars
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+-- ─── Demo Leads (Investor contacts) ───────────────────────────────
+CREATE TABLE IF NOT EXISTS public.demo_leads (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email       TEXT NOT NULL UNIQUE,
+  name        TEXT,
+  company     TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- RLS: service role only (admin reads leads from Supabase dashboard)
+ALTER TABLE public.demo_leads ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "service_role_all_demo_leads"
+  ON public.demo_leads
+  FOR ALL
+  TO service_role
+  USING (true);
