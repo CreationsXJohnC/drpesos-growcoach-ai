@@ -110,7 +110,7 @@ return (
                 onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
               />
             </div>
-            <span className="text-sm font-semibold hidden sm:block">
+            <span className="hidden min-[1166px]:block text-sm font-semibold whitespace-nowrap">
               Dr. Pesos Grow Coach AI
             </span>
           </Link>

@@ -34,7 +34,7 @@ export default function HomePage() {
                 priority
               />
             </div>
-            <span className="text-base font-bold">Dr. Pesos Grow Coach AI</span>
+            <span className="hidden min-[1166px]:block text-base font-bold whitespace-nowrap">Dr. Pesos Grow Coach AI</span>
           </div>
           <div className="hidden items-center gap-6 text-sm md:flex">
             <Link href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -90,10 +90,12 @@ export default function HomePage() {
                 Powered by Ori Company · We Grow Life
               </Badge>
 
-              <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight sm:text-6xl lg:text-7xl">
+              <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight min-[401px]:text-3xl min-[503px]:text-4xl sm:text-5xl lg:text-5xl xl:text-6xl">
                 Grow Smarter With{" "}
-                <span className="gradient-brand-text">Dr. Pesos</span>{" "}
-                Grow Coach AI
+                <span className="min-[401px]:block min-[503px]:inline min-[516px]:block min-[796px]:inline lg:block">
+                  <span className="gradient-brand-text">Dr. Pesos</span>
+                  {" "}Grow Coach AI
+                </span>
               </h1>
 
               <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground sm:text-xl lg:mx-0">
@@ -120,9 +122,9 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Right: Dr. Pesos character (desktop only) */}
-            <div className="hidden lg:flex lg:shrink-0 lg:items-center lg:justify-center">
-              <div className="relative h-120 w-90">
+            {/* Dr. Pesos character — below text on mobile, right of text on desktop */}
+            <div className="flex justify-center lg:shrink-0 lg:items-center lg:justify-center">
+              <div className="relative h-64 w-52 lg:h-96 lg:w-64 xl:h-120 xl:w-90">
                 <Image
                   src="/Dr.%20Pesos%20PeaceSign%20notext.png"
                   alt="Dr. Pesos"
