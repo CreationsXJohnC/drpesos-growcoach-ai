@@ -114,7 +114,8 @@ export function AiChat() {
               : "📊 **Daily limit reached.** You've used all 3 free questions for today. [Upgrade](/pricing) for unlimited access.";
             updateMessage(assistantId, msg);
           } else {
-            throw new Error("Chat request failed");
+            const msg = errData.error ?? "Chat request failed";
+            throw new Error(msg);
           }
           setLoading(false);
           return;
@@ -148,10 +149,11 @@ export function AiChat() {
           }
         }
       } catch (err) {
-        console.error("Chat error:", err);
+        const errMsg = err instanceof Error ? err.message : "Unknown error";
+        console.error("Chat error:", errMsg);
         updateMessage(
           assistantId,
-          "I'm having trouble connecting right now. Please try again in a moment."
+          `I'm having trouble connecting right now. Please try again in a moment.\n\n_Error: ${errMsg}_`
         );
       } finally {
         setLoading(false);
@@ -250,8 +252,9 @@ export function AiChat() {
         </div>
       </div>
 
-      {/* Messages */}
-      <ScrollArea className="flex-1 px-4 py-3">
+      {/* Messages — wrapper div with min-h-0 prevents ScrollArea from overflowing flex container */}
+      <div className="flex-1 min-h-0">
+      <ScrollArea className="h-full px-4 py-3">
         {/* Welcome message / starters */}
         {!hasStarted && messages.length === 0 && (
           <div className="space-y-4">
@@ -336,6 +339,7 @@ export function AiChat() {
         </div>
         <div ref={messagesEndRef} />
       </ScrollArea>
+      </div>
 
       {/* Image preview */}
       {uploadedImage && (

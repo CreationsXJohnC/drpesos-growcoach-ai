@@ -174,8 +174,9 @@ The user is currently in the following grow stage — tailor your responses acco
       },
     });
   } catch (error) {
-    console.error("Chat API error:", error);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Chat API error:", message);
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });

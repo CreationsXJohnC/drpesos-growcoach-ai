@@ -465,7 +465,13 @@ export default function NewCalendarPage() {
           )}
 
           {/* Navigation */}
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 space-y-2">
+            {!canAdvance() && step === 3 && form.lightType && !form.lightWattage && (
+              <p className="text-center text-xs text-amber-400">
+                ↑ Please enter your light wattage above to continue
+              </p>
+            )}
+            <div className="flex items-center justify-between">
             <Button
               variant="ghost"
               onClick={() => setStep(step - 1)}
@@ -504,6 +510,7 @@ export default function NewCalendarPage() {
                 )}
               </Button>
             )}
+            </div>
           </div>
         </div>
       </div>
