@@ -1,3 +1,7 @@
+// Load .env.local before anything else (tsx doesn't load Next.js env conventions automatically)
+import { config } from "dotenv";
+config({ path: ".env.local" });
+
 /**
  * RAG Ingest Script — converts chapter markdown files AND PDFs to embeddings and stores in Supabase
  *
@@ -177,22 +181,23 @@ async function ingestDoc(doc: SourceDoc): Promise<{ total: number; success: numb
     const chunkTitle = `${doc.title} (Part ${i + 1}/${chunks.length})`;
     try {
       const embedding = await generateEmbedding(chunks[i]);
-      const { error } = await supabase.from("knowledge_sources").upsert(
-        {
-          title: chunkTitle,
-          source_type: doc.sourceType,
-          content: chunks[i],
-          embedding,
-          metadata: {
-            source_category: doc.sourceCategory,
-            source_title: doc.title,
-            chunk_index: i,
-            total_chunks: chunks.length,
-            filename: path.basename(doc.filename),
-          },
+
+      // Delete existing chunk with same title first (clean re-run support)
+      await supabase.from("knowledge_sources").delete().eq("title", chunkTitle);
+
+      const { error } = await supabase.from("knowledge_sources").insert({
+        title: chunkTitle,
+        source_type: doc.sourceType,
+        content: chunks[i],
+        embedding,
+        metadata: {
+          source_category: doc.sourceCategory,
+          source_title: doc.title,
+          chunk_index: i,
+          total_chunks: chunks.length,
+          filename: path.basename(doc.filename),
         },
-        { onConflict: "title" }
-      );
+      });
 
       if (error) {
         console.error(`      ❌ Chunk ${i + 1} error:`, error.message);
