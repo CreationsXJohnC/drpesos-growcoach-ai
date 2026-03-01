@@ -15,8 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AiChat } from "@/components/ai-chat";
+import { createClient } from "@/lib/supabase/server";
+import { HomeNavActions } from "./home-nav-actions";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <AiChat />
@@ -47,14 +52,7 @@ export default function HomePage() {
               Dashboard
             </Link>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
-            <Button size="sm" className="glow-green" asChild>
-              <Link href="/auth/signup">Start Free Trial</Link>
-            </Button>
-          </div>
+          <HomeNavActions isLoggedIn={!!user} />
         </div>
       </nav>
 

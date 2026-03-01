@@ -23,6 +23,8 @@ import {
   Settings,
   Sprout,
   TrendingUp,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -78,6 +80,11 @@ export default function DashboardClient({
 }: Props) {
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+  const [calendarList, setCalendarList] = useState(calendars);
+
+  const handleDeleteCalendar = (id: string) => {
+    setCalendarList((prev) => prev.filter((c) => c.id !== id));
+  };
 
   const tier = profile?.subscription_tier ?? "free";
   const isPaid = tier !== "free";
@@ -283,7 +290,7 @@ return (
               </Link>
             </div>
 
-            {calendars.length === 0 ? (
+            {calendarList.length === 0 ? (
               <Card className="border-border/50 border-dashed">
                 <CardContent className="flex flex-col items-center py-12 text-center">
                   <Sprout className="h-10 w-10 text-muted-foreground mb-3" />
@@ -301,8 +308,8 @@ return (
               </Card>
             ) : (
               <div className="space-y-3">
-                {calendars.map((cal) => (
-                  <CalendarCard key={cal.id} calendar={cal} />
+                {calendarList.map((cal) => (
+                  <CalendarCard key={cal.id} calendar={cal} onDelete={handleDeleteCalendar} />
                 ))}
               </div>
             )}
@@ -378,12 +385,33 @@ return (
   );
 }
 
-function CalendarCard({ calendar }: { calendar: Calendar }) {
+function CalendarCard({
+  calendar,
+  onDelete,
+}: {
+  calendar: Calendar;
+  onDelete: (id: string) => void;
+}) {
+  const [deleting, setDeleting] = useState(false);
   const setup = calendar.setup;
   const harvestDate = new Date(calendar.estimated_harvest_date).toLocaleDateString(
     "en-US",
     { month: "short", day: "numeric", year: "numeric" }
   );
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm("Delete this grow calendar? This action cannot be undone.")) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/calendars/${calendar.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete");
+      onDelete(calendar.id);
+    } catch {
+      setDeleting(false);
+    }
+  };
 
   return (
     <Link href={`/calendar?id=${calendar.id}`}>
@@ -409,6 +437,18 @@ function CalendarCard({ calendar }: { calendar: Calendar }) {
                   {setup.strainType}
                 </Badge>
               )}
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/40 opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 disabled:cursor-not-allowed"
+                title="Delete calendar"
+              >
+                {deleting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" />
+                )}
+              </button>
               <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
           </div>
