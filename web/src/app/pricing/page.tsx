@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -153,8 +154,8 @@ export default function PricingPage() {
       <div className="border-b border-border/50 px-6 py-4">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-              <Leaf className="h-4 w-4 text-primary" />
+            <div className="relative h-7 w-7 overflow-hidden rounded-lg bg-primary/10">
+              <Image src="/Ori-Badge02.png" alt="Dr. Pesos" fill className="object-contain p-0.5" />
             </div>
             <span className="text-sm font-semibold">Dr. Pesos Grow Coach AI</span>
           </Link>

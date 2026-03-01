@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  Leaf,
   ArrowRight,
   ArrowLeft,
   CalendarDays,
@@ -22,6 +21,7 @@ import type {
 } from "@/types/grow";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
 
 interface GrowSetupForm {
   experienceLevel: ExperienceLevel | null;
@@ -171,8 +171,8 @@ export default function NewCalendarPage() {
       <div className="border-b border-border/50 px-6 py-4">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-              <Leaf className="h-4 w-4 text-primary" />
+            <div className="relative h-7 w-7 overflow-hidden rounded-lg bg-primary/10">
+              <Image src="/Ori-Badge02.png" alt="Dr. Pesos" fill className="object-contain p-0.5" />
             </div>
             <span className="text-sm font-semibold">Dr. Pesos Grow Coach AI</span>
           </Link>

@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
-  Leaf,
   CalendarDays,
   MessageCircle,
   Camera,
@@ -100,8 +99,7 @@ return (
       <div className="sticky top-0 z-30 border-b border-border/50 bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="relative h-7 w-7 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center">
-              <Leaf className="h-4 w-4 text-primary" />
+            <div className="relative h-7 w-7 overflow-hidden rounded-lg bg-primary/10">
               <Image
                 src="/Ori-Badge02.png"
                 alt="Dr. Pesos"

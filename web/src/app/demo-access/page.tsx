@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Leaf,
   ArrowRight,
   Loader2,
   CheckCircle2,
@@ -64,7 +63,6 @@ export default function DemoAccessPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="relative h-8 w-8 overflow-hidden rounded-lg bg-primary/10">
-              <Leaf className="absolute inset-0 m-auto h-4 w-4 text-primary" />
               <Image
                 src="/Ori-Badge02.png"
                 alt="Dr. Pesos"

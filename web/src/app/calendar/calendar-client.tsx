@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -200,8 +201,8 @@ export default function CalendarClient({ calendar: serverCalendar, initialComple
       <div className="sticky top-0 z-30 border-b border-border/50 bg-background/90 backdrop-blur-xl print:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-              <Leaf className="h-4 w-4 text-primary" />
+            <div className="relative h-7 w-7 overflow-hidden rounded-lg bg-primary/10">
+              <Image src="/Ori-Badge02.png" alt="Dr. Pesos" fill className="object-contain p-0.5" />
             </div>
             <span className="text-sm font-semibold hidden sm:block">Dr. Pesos Grow Coach AI</span>
           </Link>
