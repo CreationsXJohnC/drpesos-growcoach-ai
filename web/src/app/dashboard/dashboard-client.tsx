@@ -93,7 +93,7 @@ export default function DashboardClient({
   };
 
 return (
-    <div className="min-h-screen bg-background text-foreground dark">
+    <div className="min-h-screen bg-background text-foreground">
       <AiChat />
 
       {/* Header */}

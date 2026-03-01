@@ -115,7 +115,7 @@ export default function SettingsClient({ user, profile }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground dark">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <div className="sticky top-0 z-30 border-b border-border/50 bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-3">

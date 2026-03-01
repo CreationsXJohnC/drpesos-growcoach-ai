@@ -18,7 +18,7 @@ import { AiChat } from "@/components/ai-chat";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background text-foreground dark">
+    <div className="min-h-screen bg-background text-foreground">
       <AiChat />
 
       {/* Navigation */}

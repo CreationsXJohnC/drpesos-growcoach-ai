@@ -170,7 +170,7 @@ function SignupForm() {
 
 export default function SignupPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 dark">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md border-border/50">
         <CardHeader className="text-center space-y-3">
           <div className="flex justify-center">

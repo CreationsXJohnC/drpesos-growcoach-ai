@@ -151,9 +151,9 @@
   body {
     @apply bg-background text-foreground;
   }
-  /* Default to dark mode for Dr. Pesos brand */
+  /* Default to light mode */
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
 }
 

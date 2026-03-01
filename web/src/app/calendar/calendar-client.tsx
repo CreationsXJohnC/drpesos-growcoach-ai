@@ -116,7 +116,7 @@ export default function CalendarClient({ calendar: serverCalendar, initialComple
 
   if (!calendar) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background dark">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex items-center gap-3 text-muted-foreground">
           <Leaf className="h-5 w-5 animate-pulse text-primary" />
           <span>Loading your grow calendar...</span>
@@ -174,7 +174,7 @@ export default function CalendarClient({ calendar: serverCalendar, initialComple
     new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
   return (
-    <div className="min-h-screen bg-background text-foreground dark">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Hidden in print */}
       <div className="print:hidden">
         <AiChat />

@@ -166,7 +166,7 @@ export default function NewCalendarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground dark flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header */}
       <div className="border-b border-border/50 px-6 py-4">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
