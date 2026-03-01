@@ -57,10 +57,10 @@ interface Props {
 }
 
 const TIER_LABELS: Record<string, string> = {
-  free: "Free Trial",
-  grower_monthly: "Grower",
-  commercial_monthly: "Commercial",
-  lifetime: "Lifetime",
+  free: "48-Hour Free Trial",
+  grower_monthly: "Grower Monthly",
+  commercial_monthly: "Commercial Monthly",
+  lifetime: "Lifetime Access",
 };
 
 const TIER_COLORS: Record<string, string> = {

@@ -30,6 +30,7 @@ interface GrowSetupForm {
   medium: GrowMedium | null;
   lightType: LightType | null;
   lightWattage: string;
+  underCanopyLight: boolean;
   nutrientType: NutrientType | null;
   spaceSize: string;
   startDate: string;
@@ -60,6 +61,7 @@ export default function NewCalendarPage() {
     medium: null,
     lightType: null,
     lightWattage: "",
+    underCanopyLight: false,
     nutrientType: null,
     spaceSize: "4x4",
     startDate: new Date().toISOString().split("T")[0],
@@ -100,6 +102,7 @@ export default function NewCalendarPage() {
           medium: form.medium,
           lightType: form.lightType,
           lightWattage: form.lightWattage,
+          underCanopyLight: form.underCanopyLight,
           nutrientType: form.nutrientType,
           spaceSize: form.spaceSize,
           startDate: form.startDate,
@@ -113,16 +116,23 @@ export default function NewCalendarPage() {
       }
 
       // ── Consume SSE stream ───────────────────────────────────────
+      // Buffer incomplete lines across chunks — the large calendar JSON
+      // will almost always be split across multiple network packets.
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
+      let buffer = "";
 
       while (reader) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value);
-        for (const line of chunk.split("\n")) {
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        // Keep the last (potentially incomplete) line in the buffer
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
-          const raw = line.slice(6);
+          const raw = line.slice(6).trim();
           if (raw === "[DONE]") break;
           try {
             const parsed = JSON.parse(raw);
@@ -138,7 +148,7 @@ export default function NewCalendarPage() {
               }
               return;
             }
-            // parsed.progress — heartbeat, just keep waiting
+            // parsed.progress — heartbeat, keep waiting
           } catch (parseErr) {
             if (parseErr instanceof SyntaxError) continue;
             throw parseErr;
@@ -275,7 +285,7 @@ export default function NewCalendarPage() {
             >
               <div className="space-y-6">
                 <div>
-                  <p className="mb-3 text-sm font-medium text-muted-foreground">Light Type</p>
+                  <p className="mb-3 text-sm font-medium text-muted-foreground">Primary Light Type</p>
                   <OptionGrid
                     options={[
                       { value: "led", label: "LED", desc: "Light-Emitting Diode. Energy-efficient, low heat, adjustable spectrum and intensity." },
@@ -284,7 +294,6 @@ export default function NewCalendarPage() {
                       { value: "cmh", label: "CMH", desc: "Ceramic Metal Halide. Full-spectrum output — excellent terpene expression and quality finish." },
                       { value: "fluorescent", label: "Fluorescent (T5)", desc: "Low-intensity fluorescent tubes. Best for seedlings, clones, and propagation stages." },
                       { value: "tungsten", label: "Tungsten / Incandescent", desc: "Traditional incandescent bulbs. Low efficiency, warm spectrum. Supplemental use only." },
-                      { value: "under_canopy", label: "Under Canopy Lighting", desc: "Supplemental lighting below the main canopy to light lower bud sites and increase overall yield." },
                     ]}
                     selected={form.lightType}
                     onSelect={(v) => setForm({ ...form, lightType: v as LightType, lightWattage: "" })}
@@ -340,6 +349,40 @@ export default function NewCalendarPage() {
                     )}
                   </div>
                 )}
+
+                {/* Under Canopy — always optional add-on, works alongside any primary light */}
+                <div>
+                  <p className="mb-2 text-sm font-medium text-muted-foreground">
+                    Add-On Lighting <span className="text-xs font-normal">(optional)</span>
+                  </p>
+                  <button
+                    onClick={() => setForm({ ...form, underCanopyLight: !form.underCanopyLight })}
+                    className={cn(
+                      "w-full rounded-xl border p-4 text-left transition-all",
+                      form.underCanopyLight
+                        ? "border-primary bg-primary/10 glow-green"
+                        : "border-border bg-card hover:border-primary/40"
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-sm mb-1">Under Canopy Lighting</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Supplemental lighting placed below the main canopy to illuminate lower bud sites.
+                          Can be selected alongside any primary light. Significantly improves lower-cola yield.
+                        </p>
+                      </div>
+                      <div className={cn(
+                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-all",
+                        form.underCanopyLight
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border text-transparent"
+                      )}>
+                        ✓
+                      </div>
+                    </div>
+                  </button>
+                </div>
               </div>
             </StepCard>
           )}
@@ -487,6 +530,7 @@ export default function NewCalendarPage() {
                     <strong className="text-foreground uppercase">
                       {form.lightType?.replace("_", " ")}
                       {form.lightWattage && ` · ${form.lightWattage}`}
+                      {form.underCanopyLight && " + Under Canopy"}
                     </strong>
                   </span>
                   <span>Nutrients: <strong className="text-foreground capitalize">{form.nutrientType}</strong></span>

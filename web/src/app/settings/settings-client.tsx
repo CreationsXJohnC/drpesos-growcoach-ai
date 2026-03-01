@@ -40,10 +40,10 @@ interface Props {
 }
 
 const TIER_LABELS: Record<string, string> = {
-  free: "Free Trial",
-  grower_monthly: "Grower",
-  commercial_monthly: "Commercial",
-  lifetime: "Lifetime",
+  free: "48-Hour Free Trial",
+  grower_monthly: "Grower Monthly",
+  commercial_monthly: "Commercial Monthly",
+  lifetime: "Lifetime Access",
 };
 
 const TIER_COLORS: Record<string, string> = {
@@ -227,7 +227,7 @@ export default function SettingsClient({ user, profile }: Props) {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Amount</span>
-                    <span>{tier === "commercial_monthly" ? "$69/mo" : "$14/mo"}</span>
+                    <span>{tier === "commercial_monthly" ? "$20/mo" : "$5/mo"}</span>
                   </div>
                 </div>
               )}
@@ -245,11 +245,11 @@ export default function SettingsClient({ user, profile }: Props) {
 
               {isFree && (
                 <div className="rounded-lg bg-muted/30 px-4 py-3 text-xs text-muted-foreground space-y-1.5">
-                  <p>Free trial — 48-hour access window, 10 questions/day.</p>
+                  <p>48-Hour Free Trial — 10 AI questions per day during your trial window.</p>
                   <p>
                     Upgrade to{" "}
                     <Link href="/pricing" className="text-primary hover:underline">
-                      Grower ($14/mo)
+                      Grower ($5/mo)
                     </Link>{" "}
                     for unlimited chat, calendars, and photo diagnosis.
                   </p>

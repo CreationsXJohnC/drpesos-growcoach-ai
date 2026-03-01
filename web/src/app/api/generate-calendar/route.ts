@@ -157,9 +157,12 @@ export async function POST(req: NextRequest) {
 
 function buildCalendarPrompt(setup: GrowSetup): string {
   const goals = setup.goals.join(", ");
-  const lightDesc = setup.lightWattage
+  const primaryLightBase = setup.lightWattage
     ? `${setup.lightType?.toUpperCase()} (${setup.lightWattage})`
     : setup.lightType?.toUpperCase();
+  const lightDesc = setup.underCanopyLight
+    ? `${primaryLightBase} + Under Canopy Supplemental Lighting`
+    : primaryLightBase;
 
   // Medium-specific guidance hints
   const mediumGuidance: Record<string, string> = {
@@ -209,7 +212,7 @@ MEDIUM-SPECIFIC REQUIREMENTS:
 ${mediumGuidance[setup.medium ?? "soil"] ?? ""}
 
 LIGHT-SPECIFIC REQUIREMENTS:
-${lightGuidance[setup.lightType ?? "led"] ?? ""}
+${lightGuidance[setup.lightType ?? "led"] ?? ""}${setup.underCanopyLight ? "\nUNDER CANOPY SUPPLEMENTAL: Schedule activation starting mid-flower (week 4–5 of flower). Target lower bud sites receiving under 200 μmol. Place lights 12–18\" below main canopy. Include specific tasks for positioning, power-on timing, and monitoring lower cola development." : ""}
 
 NUTRIENT PROGRAM REQUIREMENTS:
 ${nutrientGuidance}

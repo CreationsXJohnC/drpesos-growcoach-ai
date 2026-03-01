@@ -37,6 +37,7 @@ export interface GrowSetup {
   medium: GrowMedium;
   lightType: LightType;
   lightWattage: string; // e.g. "600W", "480W", "1000W"
+  underCanopyLight?: boolean; // optional supplemental under-canopy lighting
   nutrientType: NutrientType;
   spaceSize: string; // e.g. "4x4", "5x5", "10x10"
   startDate: string; // ISO date string
