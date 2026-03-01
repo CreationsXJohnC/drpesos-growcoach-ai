@@ -28,9 +28,19 @@ function toAnthropicContent(
 
   const blocks: Anthropic.ContentBlockParam[] = msg.content.map((block) => {
     if (block.type === "image" && block.source?.url) {
+      const url = block.source.url;
+      if (url.startsWith("data:")) {
+        // Base64 data URL — convert to Anthropic base64 source
+        const commaIdx = url.indexOf(",");
+        const media_type = url.slice(5, commaIdx).split(";")[0] as "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+        return {
+          type: "image",
+          source: { type: "base64", media_type, data: url.slice(commaIdx + 1) },
+        } as Anthropic.ContentBlockParam;
+      }
       return {
         type: "image",
-        source: { type: "url", url: block.source.url },
+        source: { type: "url", url },
       } as Anthropic.ContentBlockParam;
     }
     return { type: "text", text: block.text ?? "" };

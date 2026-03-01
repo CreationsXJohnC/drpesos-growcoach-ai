@@ -80,10 +80,16 @@ export default function DiagnosePage() {
       setError("Please upload an image file (JPG, PNG, HEIC, etc.)");
       return;
     }
-    const url = URL.createObjectURL(file);
-    setImage({ url, file });
-    setResult(null);
-    setError("");
+    // Use FileReader to get a base64 data URL — blob:// URLs are browser-local
+    // and can't be fetched by Anthropic's servers
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      setImage({ url: dataUrl, file });
+      setResult(null);
+      setError("");
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {

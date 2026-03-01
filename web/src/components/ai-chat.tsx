@@ -171,8 +171,12 @@ export function AiChat() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setUploadedImage({ url, name: file.name });
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setUploadedImage({ url: dataUrl, name: file.name });
+    };
+    reader.readAsDataURL(file);
   };
 
   const chatWidth = isExpanded ? "w-[700px]" : "w-[380px]";

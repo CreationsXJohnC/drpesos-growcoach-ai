@@ -107,7 +107,10 @@ export default function NewCalendarPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to generate calendar");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error ?? "Failed to generate calendar");
+      }
       const calendar = await res.json();
 
       if (calendar.id) {
