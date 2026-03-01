@@ -177,7 +177,7 @@ return (
                         {Math.floor((trialHoursRemaining % 1) * 60)}m remaining
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {Math.max(0, 3 - questionsUsedToday)} of 3 questions
+                        {Math.max(0, 10 - questionsUsedToday)} of 10 questions
                         remaining today
                       </p>
                     </>
@@ -345,7 +345,7 @@ return (
                   </p>
                 ) : (
                   <div className="space-y-1.5 text-xs text-muted-foreground">
-                    <p>✓ AI chat (3 questions/day)</p>
+                    <p>✓ AI chat (10 questions/day)</p>
                     <p>✓ Grow calendar generator</p>
                     <p className="text-muted-foreground/50">✗ Unlimited chat</p>
                     <p className="text-muted-foreground/50">✗ Photo diagnosis</p>

@@ -110,7 +110,7 @@ export function AiChat() {
           } else if (response.status === 402) {
             const msg = errData.reason === "trial_expired"
               ? "⏰ **Your free trial has ended.** [Upgrade your plan](/pricing) to continue getting expert cultivation guidance from Dr. Pesos."
-              : "📊 **Daily limit reached.** You've used all 3 free questions for today. [Upgrade](/pricing) for unlimited access.";
+              : "📊 **Daily limit reached.** You've used all 10 free questions for today. [Upgrade](/pricing) for unlimited access.";
             updateMessage(assistantId, msg);
           } else {
             const msg = errData.error ?? "Chat request failed";

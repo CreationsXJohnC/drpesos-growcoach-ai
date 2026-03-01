@@ -118,7 +118,7 @@ export default function HomePage() {
               </div>
 
               <p className="mt-4 text-sm text-muted-foreground text-center lg:text-left">
-                No credit card required for trial · 3 questions/day · Full access after upgrade
+                No credit card required for trial · 10 questions/day · Full access after upgrade
               </p>
             </div>
 
@@ -266,13 +266,13 @@ export default function HomePage() {
               tier="Free Trial"
               price="$0"
               period="48 hours"
-              features={["3 questions/day", "Full AI chat access", "Sample grow calendar", "No credit card"]}
+              features={["10 questions/day", "Full AI chat access", "Sample grow calendar", "No credit card"]}
               cta="Start Free Trial"
               href="/auth/signup"
             />
             <PricingCard
               tier="Grower"
-              price="$14"
+              price="$5"
               period="/month"
               features={["Unlimited AI chat", "Full grow calendar", "Photo diagnosis", "Progress tracking", "Priority responses"]}
               cta="Get Started"
@@ -281,7 +281,7 @@ export default function HomePage() {
             />
             <PricingCard
               tier="Commercial"
-              price="$69"
+              price="$20"
               period="/month"
               features={["Everything in Grower", "SOP-style responses", "KPI & workflow plans", "Batch management", "Staff training SOPs"]}
               cta="Go Commercial"
@@ -289,7 +289,7 @@ export default function HomePage() {
             />
             <PricingCard
               tier="Lifetime"
-              price="$127"
+              price="$125"
               period="one-time"
               features={["Grower tier forever", "All future updates", "Priority support", "Early feature access"]}
               cta="Get Lifetime Access"

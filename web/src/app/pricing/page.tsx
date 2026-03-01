@@ -40,7 +40,7 @@ const TIERS: PricingTier[] = [
     description: "Try Dr. Pesos risk-free for 48 hours.",
     features: [
       "48-hour full access window",
-      "3 AI questions per day",
+      "10 AI questions per day",
       "Grow calendar generator (1 calendar)",
       "Environmental targets",
       "Basic cultivation guidance",
@@ -57,7 +57,7 @@ const TIERS: PricingTier[] = [
   {
     id: "grower_monthly",
     name: "Grower",
-    price: "$14",
+    price: "$5",
     period: "/month",
     description: "Everything a serious home grower needs.",
     features: [
@@ -78,7 +78,7 @@ const TIERS: PricingTier[] = [
   {
     id: "commercial_monthly",
     name: "Commercial",
-    price: "$69",
+    price: "$20",
     period: "/month",
     description: "SOP-grade guidance for licensed cultivators.",
     features: [
@@ -97,7 +97,7 @@ const TIERS: PricingTier[] = [
   {
     id: "lifetime",
     name: "Lifetime",
-    price: "$127",
+    price: "$125",
     period: " one-time",
     description: "Pay once. Grow forever.",
     features: [

@@ -245,7 +245,7 @@ export default function SettingsClient({ user, profile }: Props) {
 
               {isFree && (
                 <div className="rounded-lg bg-muted/30 px-4 py-3 text-xs text-muted-foreground space-y-1.5">
-                  <p>Free trial — 48-hour access window, 3 questions/day.</p>
+                  <p>Free trial — 48-hour access window, 10 questions/day.</p>
                   <p>
                     Upgrade to{" "}
                     <Link href="/pricing" className="text-primary hover:underline">

@@ -95,8 +95,8 @@ export async function checkAndIncrementQuestion(
   const lastDate = profile.last_question_date?.split("T")[0];
   const questionsToday = lastDate === today ? profile.questions_today : 0;
 
-  // Check 3 questions/day limit
-  if (questionsToday >= 3) {
+  // Check 10 questions/day limit
+  if (questionsToday >= 10) {
     return { allowed: false, reason: "daily_limit_reached" };
   }
 
