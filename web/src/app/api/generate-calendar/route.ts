@@ -81,15 +81,15 @@ export async function POST(req: NextRequest) {
     // Parse the JSON calendar from Claude's response
     let calendarData;
     try {
-      // Strip any potential markdown code fences
-      const cleaned = content.text
-        .replace(/^```json\n?/, "")
-        .replace(/\n?```$/, "")
-        .trim();
-      calendarData = JSON.parse(cleaned);
+      // Extract JSON object — find outermost { } regardless of surrounding text or code fences
+      const text = content.text;
+      const jsonStart = text.indexOf("{");
+      const jsonEnd = text.lastIndexOf("}");
+      if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON found in response");
+      calendarData = JSON.parse(text.slice(jsonStart, jsonEnd + 1));
     } catch {
-      console.error("Failed to parse calendar JSON:", content.text);
-      throw new Error("Failed to parse grow calendar from AI response");
+      console.error("Failed to parse calendar JSON:", content.text.slice(0, 500));
+      throw new Error("Failed to parse grow calendar — please try again");
     }
 
     // ── Save to Supabase (authenticated users only) ─────────────────

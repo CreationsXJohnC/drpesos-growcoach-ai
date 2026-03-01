@@ -52,6 +52,7 @@ export default function NewCalendarPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState("");
   const [form, setForm] = useState<GrowSetupForm>({
     experienceLevel: null,
     strainType: null,
@@ -87,6 +88,7 @@ export default function NewCalendarPage() {
 
   const handleGenerate = async () => {
     setIsGenerating(true);
+    setGenerateError("");
     try {
       const res = await fetch("/api/generate-calendar", {
         method: "POST",
@@ -116,7 +118,9 @@ export default function NewCalendarPage() {
         router.push("/calendar");
       }
     } catch (err) {
-      console.error(err);
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      console.error("Calendar generation error:", msg);
+      setGenerateError(msg);
       setIsGenerating(false);
     }
   };
@@ -469,6 +473,16 @@ export default function NewCalendarPage() {
             {!canAdvance() && step === 3 && form.lightType && !form.lightWattage && (
               <p className="text-center text-xs text-amber-400">
                 ↑ Please enter your light wattage above to continue
+              </p>
+            )}
+            {generateError && (
+              <p className="text-center text-xs text-destructive rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2">
+                {generateError}
+              </p>
+            )}
+            {isGenerating && (
+              <p className="text-center text-xs text-muted-foreground">
+                Calendar generation takes 30–60 seconds — hang tight...
               </p>
             )}
             <div className="flex items-center justify-between">

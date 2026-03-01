@@ -265,7 +265,6 @@ Start your response with a severity assessment: HEALTHY, MINOR, MODERATE, or SEV
                     const file = e.target.files?.[0];
                     if (file) handleFile(file);
                   }}
-                  capture="environment"
                 />
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 mb-4">
                   <Upload className="h-6 w-6 text-primary" />
