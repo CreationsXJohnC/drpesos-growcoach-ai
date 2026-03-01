@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     if (!user && !demo) {
       return NextResponse.json(
-        { error: "unauthorized", message: "Please sign in to generate a grow calendar." },
+        { error: "Please sign in to generate a grow calendar." },
         { status: 401 }
       );
     }
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         const hoursElapsed = (Date.now() - trialStart.getTime()) / (1000 * 60 * 60);
         if (hoursElapsed > 48) {
           return NextResponse.json(
-            { error: "upgrade_required", reason: "trial_expired", message: "Your free trial has ended. Upgrade to generate grow calendars." },
+            { error: "Your free trial has ended. Upgrade to generate grow calendars." },
             { status: 402 }
           );
         }
@@ -64,60 +64,94 @@ export async function POST(req: NextRequest) {
     }
 
     const userPrompt = buildCalendarPrompt(setup);
-
     const client = getAnthropicClient();
-    const response = await client.messages.create({
-      model: CLAUDE_MODEL,
-      max_tokens: 8096,
-      system: GROW_CALENDAR_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userPrompt }],
+
+    // ── Stream the response so the connection stays alive ──────────
+    // Non-streaming calls with 8096 max tokens can exceed Vercel's
+    // serverless timeout on Hobby plan. Streaming keeps the connection
+    // alive and forwards chunks to the client as they arrive.
+    const stream = new ReadableStream({
+      async start(controller) {
+        const enc = new TextEncoder();
+        let fullText = "";
+
+        try {
+          const anthropicStream = client.messages.stream({
+            model: CLAUDE_MODEL,
+            max_tokens: 8096,
+            system: GROW_CALENDAR_SYSTEM_PROMPT,
+            messages: [{ role: "user", content: userPrompt }],
+          });
+
+          for await (const event of anthropicStream) {
+            if (
+              event.type === "content_block_delta" &&
+              event.delta.type === "text_delta"
+            ) {
+              fullText += event.delta.text;
+              // Send a heartbeat so the client knows we're still alive
+              controller.enqueue(enc.encode(`data: ${JSON.stringify({ progress: true })}\n\n`));
+            }
+          }
+
+          // ── Parse JSON calendar from complete text ──────────────
+          let calendarData;
+          try {
+            const jsonStart = fullText.indexOf("{");
+            const jsonEnd = fullText.lastIndexOf("}");
+            if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON found in Claude response");
+            calendarData = JSON.parse(fullText.slice(jsonStart, jsonEnd + 1));
+          } catch {
+            console.error("Calendar JSON parse failed. First 500 chars:", fullText.slice(0, 500));
+            controller.enqueue(enc.encode(`data: ${JSON.stringify({ error: "Dr. Pesos returned an unexpected format — please try again." })}\n\n`));
+            controller.enqueue(enc.encode("data: [DONE]\n\n"));
+            controller.close();
+            return;
+          }
+
+          // ── Save to Supabase (authenticated users only) ─────────
+          if (user && !demo) {
+            try {
+              const { saveGrowCalendar } = await import("@/lib/supabase/queries");
+              const saved = await saveGrowCalendar(
+                user.id,
+                setup as unknown as Record<string, unknown>,
+                calendarData.weeks,
+                calendarData.totalWeeks,
+                calendarData.estimatedHarvestDate
+              );
+              calendarData.id = saved.id;
+            } catch (saveError) {
+              console.error("Failed to save calendar to Supabase:", saveError);
+              // Continue — client will fall back to sessionStorage
+            }
+          }
+
+          // Send the final calendar JSON
+          controller.enqueue(enc.encode(`data: ${JSON.stringify({ calendar: calendarData })}\n\n`));
+          controller.enqueue(enc.encode("data: [DONE]\n\n"));
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error("Calendar generation stream error:", message);
+          controller.enqueue(enc.encode(`data: ${JSON.stringify({ error: message })}\n\n`));
+          controller.enqueue(enc.encode("data: [DONE]\n\n"));
+        } finally {
+          controller.close();
+        }
+      },
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") {
-      throw new Error("Unexpected response type from Claude");
-    }
-
-    // Parse the JSON calendar from Claude's response
-    let calendarData;
-    try {
-      // Extract JSON object — find outermost { } regardless of surrounding text or code fences
-      const text = content.text;
-      const jsonStart = text.indexOf("{");
-      const jsonEnd = text.lastIndexOf("}");
-      if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON found in response");
-      calendarData = JSON.parse(text.slice(jsonStart, jsonEnd + 1));
-    } catch {
-      console.error("Failed to parse calendar JSON:", content.text.slice(0, 500));
-      throw new Error("Failed to parse grow calendar — please try again");
-    }
-
-    // ── Save to Supabase (authenticated users only) ─────────────────
-    if (user && !demo) {
-      try {
-        const { saveGrowCalendar } = await import("@/lib/supabase/queries");
-        const saved = await saveGrowCalendar(
-          user.id,
-          setup as unknown as Record<string, unknown>,
-          calendarData.weeks,
-          calendarData.totalWeeks,
-          calendarData.estimatedHarvestDate
-        );
-        return NextResponse.json({ id: saved.id, ...calendarData });
-      } catch (saveError) {
-        console.error("Failed to save calendar to Supabase:", saveError);
-        // Return without ID — client falls back to redirect without ID
-        return NextResponse.json(calendarData);
-      }
-    }
-
-    return NextResponse.json(calendarData);
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
   } catch (error) {
-    console.error("Generate calendar error:", error);
-    return NextResponse.json(
-      { error: "Failed to generate grow calendar" },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Generate calendar error:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

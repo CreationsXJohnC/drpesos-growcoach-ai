@@ -111,15 +111,42 @@ export default function NewCalendarPage() {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error ?? "Failed to generate calendar");
       }
-      const calendar = await res.json();
 
-      if (calendar.id) {
-        router.push(`/calendar?id=${calendar.id}`);
-      } else {
-        sessionStorage.setItem("growCalendar", JSON.stringify(calendar));
-        sessionStorage.setItem("growSetup", JSON.stringify(form));
-        router.push("/calendar");
+      // ── Consume SSE stream ───────────────────────────────────────
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+
+      while (reader) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        for (const line of chunk.split("\n")) {
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6);
+          if (raw === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed.error) throw new Error(parsed.error);
+            if (parsed.calendar) {
+              const calendar = parsed.calendar;
+              if (calendar.id) {
+                router.push(`/calendar?id=${calendar.id}`);
+              } else {
+                sessionStorage.setItem("growCalendar", JSON.stringify(calendar));
+                sessionStorage.setItem("growSetup", JSON.stringify(form));
+                router.push("/calendar");
+              }
+              return;
+            }
+            // parsed.progress — heartbeat, just keep waiting
+          } catch (parseErr) {
+            if (parseErr instanceof SyntaxError) continue;
+            throw parseErr;
+          }
+        }
       }
+
+      throw new Error("No calendar was returned — please try again.");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
       console.error("Calendar generation error:", msg);

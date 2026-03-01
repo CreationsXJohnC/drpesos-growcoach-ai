@@ -372,9 +372,9 @@ Start your response with a severity assessment: HEALTHY, MINOR, MODERATE, or SEV
 
                 {/* Full analysis */}
                 <Card className="border-border/50">
-                  <CardContent className="p-5">
-                    <ScrollArea className="max-h-[500px]">
-                      <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground prose-strong:text-foreground">
+                  <CardContent className="p-5 overflow-hidden">
+                    <ScrollArea className="h-105 w-full">
+                      <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground prose-strong:text-foreground pr-4">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {result.fullAnalysis}
                         </ReactMarkdown>
