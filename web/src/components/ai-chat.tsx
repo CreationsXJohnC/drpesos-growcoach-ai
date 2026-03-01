@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { useChatStore } from "@/stores/chat-store";
 import { WELCOME_MESSAGE, CONVERSATION_STARTERS } from "@/lib/ai/system-prompt";
 import { Button } from "@/components/ui/button";
@@ -189,7 +190,14 @@ export function AiChat() {
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-primary px-4 py-3 text-primary-foreground shadow-lg glow-green hover:scale-105 transition-all duration-200"
         aria-label="Open Dr. Pesos Grow Coach AI"
       >
-        <Leaf className="h-5 w-5 text-primary-foreground" />
+        <div className="relative h-6 w-6 shrink-0 overflow-hidden rounded-full">
+          <Image
+            src="/Dr.%20Pesos%20GreenTee%20notext.png"
+            alt="Dr. Pesos"
+            fill
+            className="object-contain"
+          />
+        </div>
         <span className="text-sm font-semibold hidden sm:block">Ask Dr. Pesos</span>
       </button>
     );

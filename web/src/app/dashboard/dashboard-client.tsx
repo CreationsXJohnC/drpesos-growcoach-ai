@@ -440,14 +440,14 @@ function CalendarCard({
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/40 opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 disabled:cursor-not-allowed"
-                title="Delete calendar"
+                className="flex items-center gap-1 rounded-md border border-destructive/20 bg-destructive/5 px-2 py-1 text-xs text-destructive/70 transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {deleting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="h-3 w-3 animate-spin" />
                 ) : (
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3 w-3" />
                 )}
+                <span>{deleting ? "Deleting…" : "Delete"}</span>
               </button>
               <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
