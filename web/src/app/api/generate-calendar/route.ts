@@ -9,9 +9,8 @@ import type { GrowSetup, CalendarData } from "@/types/grow";
 // Also uses Haiku (3× faster than Sonnet) to stay well within the window.
 export const runtime = "edge";
 
-// Haiku is fast enough to complete a full calendar in ~15–20 seconds
 const CALENDAR_MODEL = "claude-haiku-4-5-20251001";
-const CALENDAR_MAX_TOKENS = 4000;
+const CALENDAR_MAX_TOKENS = 8096; // Haiku max — prevents JSON truncation
 
 export async function POST(req: NextRequest) {
   try {
@@ -95,15 +94,10 @@ export async function POST(req: NextRequest) {
           }
 
           // ── Parse JSON from complete response ──────────────────
-          let calendarData: CalendarData & { id?: string };
-          try {
-            const jsonStart = fullText.indexOf("{");
-            const jsonEnd = fullText.lastIndexOf("}");
-            if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON in response");
-            calendarData = JSON.parse(fullText.slice(jsonStart, jsonEnd + 1));
-          } catch {
-            console.error("Calendar JSON parse error. First 500 chars:", fullText.slice(0, 500));
-            controller.enqueue(enc.encode(`data: ${JSON.stringify({ error: "Dr. Pesos returned an unexpected format — please try again." })}\n\n`));
+          const calendarData = parseCalendarJson(fullText) as (CalendarData & { id?: string }) | null;
+          if (!calendarData) {
+            console.error("Calendar JSON parse error. Response length:", fullText.length, "First 600 chars:", fullText.slice(0, 600));
+            controller.enqueue(enc.encode(`data: ${JSON.stringify({ error: "Calendar generation failed — please try again." })}\n\n`));
             controller.enqueue(enc.encode("data: [DONE]\n\n"));
             controller.close();
             return;
@@ -240,6 +234,62 @@ async function sendCalendarEmail(
   });
 }
 
+// ── JSON parser with recovery for truncated responses ─────────────────
+// When Haiku hits the token limit mid-generation, the JSON is cut off
+// before closing braces. We try a series of closing suffixes so a
+// partial calendar (e.g. 10/14 weeks) is returned rather than nothing.
+function parseCalendarJson(text: string): CalendarData | null {
+  if (!text) return null;
+
+  // Strip markdown code fences Haiku sometimes adds despite instructions
+  const cleaned = text.replace(/```(?:json)?\s*/g, "").replace(/```\s*/g, "").trim();
+
+  const jsonStart = cleaned.indexOf("{");
+  if (jsonStart === -1) return null;
+
+  const partial = cleaned.slice(jsonStart);
+
+  // Try the full text first (happy path), then progressive closing suffixes
+  const candidates = [
+    partial,
+    partial + "}",
+    partial + "]}",
+    partial + '"]}]}',
+    partial + '"}]}]}',
+    partial + '"}}]}',
+    partial + '"}}]}]}',
+    partial + ',"drPesosNote":""}]}]}',
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      const result = JSON.parse(candidate);
+      if (
+        result &&
+        typeof result === "object" &&
+        Array.isArray(result.weeks) &&
+        result.weeks.length > 0
+      ) {
+        // Fill defaults for any fields missing due to truncation
+        if (!result.totalWeeks) result.totalWeeks = result.weeks.length;
+        if (!result.estimatedHarvestDate) {
+          const last = result.weeks[result.weeks.length - 1];
+          result.estimatedHarvestDate =
+            last?.endDate ?? new Date().toISOString().split("T")[0];
+        }
+        // Drop any malformed trailing weeks (missing required fields)
+        result.weeks = (result.weeks as Array<Record<string, unknown>>).filter(
+          (w) => w.week && w.stage && Array.isArray(w.dailyTasks) && w.envTargets
+        );
+        if (result.weeks.length === 0) continue;
+        return result as CalendarData;
+      }
+    } catch { /* try next suffix */ }
+  }
+
+  return null;
+}
+
 // ── Prompt builder ────────────────────────────────────────────────────
 function buildCalendarPrompt(setup: GrowSetup): string {
   const goals = setup.goals.join(", ");
@@ -318,7 +368,7 @@ Return ONLY valid JSON — no markdown fences, no explanation text:
       "startDate": "<ISO date>",
       "endDate": "<ISO date>",
       "dailyTasks": [
-        { "id": "w1-t1", "task": "<task>", "category": "<watering|nutrients|training|ipm|environment|defoliation|observation|harvest>", "priority": "<required|recommended|optional>", "drPesosNote": "<optional short tip>" }
+        { "id": "w1-t1", "task": "<task>", "category": "<watering|nutrients|training|ipm|environment|defoliation|observation|harvest>", "priority": "<required|recommended|optional>" }
       ],
       "envTargets": { "tempF": "<range>", "rh": "<range>", "vpd": "<range>", "ppfd": "<range>", "lightSchedule": "<e.g. 18/6>" },
       "nutrients": "<brief nutrient note>",
