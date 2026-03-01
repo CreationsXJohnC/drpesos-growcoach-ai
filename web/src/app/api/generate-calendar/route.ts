@@ -1,12 +1,17 @@
-import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/ai/anthropic";
+import { getAnthropicClient } from "@/lib/ai/anthropic";
 import { GROW_CALENDAR_SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import type { GrowSetup } from "@/types/grow";
+import type { GrowSetup, CalendarData } from "@/types/grow";
 
-export const runtime = "nodejs";
-export const maxDuration = 60;
+// Edge runtime: 25-second streaming timeout on Hobby vs 10-second for Node.js.
+// Also uses Haiku (3× faster than Sonnet) to stay well within the window.
+export const runtime = "edge";
+
+// Haiku is fast enough to complete a full calendar in ~15–20 seconds
+const CALENDAR_MODEL = "claude-haiku-4-5-20251001";
+const CALENDAR_MAX_TOKENS = 4000;
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,7 +28,7 @@ export async function POST(req: NextRequest) {
               cookiesToSet.forEach(({ name, value, options }) =>
                 cookieStore.set(name, value, options)
               );
-            } catch { /* Server Component context — safe to ignore */ }
+            } catch { /* edge/streaming context — ignore */ }
           },
         },
       }
@@ -42,8 +47,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Subscription check: calendar generation requires paid tier ──
-    // (Free trial users can generate one calendar to demo the feature)
+    // ── Subscription check ────────────────────────────────────────
     if (user && !demo) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -66,10 +70,7 @@ export async function POST(req: NextRequest) {
     const userPrompt = buildCalendarPrompt(setup);
     const client = getAnthropicClient();
 
-    // ── Stream the response so the connection stays alive ──────────
-    // Non-streaming calls with 8096 max tokens can exceed Vercel's
-    // serverless timeout on Hobby plan. Streaming keeps the connection
-    // alive and forwards chunks to the client as they arrive.
+    // ── Stream so the edge connection stays alive ──────────────────
     const stream = new ReadableStream({
       async start(controller) {
         const enc = new TextEncoder();
@@ -77,8 +78,8 @@ export async function POST(req: NextRequest) {
 
         try {
           const anthropicStream = client.messages.stream({
-            model: CLAUDE_MODEL,
-            max_tokens: 8096,
+            model: CALENDAR_MODEL,
+            max_tokens: CALENDAR_MAX_TOKENS,
             system: GROW_CALENDAR_SYSTEM_PROMPT,
             messages: [{ role: "user", content: userPrompt }],
           });
@@ -89,50 +90,54 @@ export async function POST(req: NextRequest) {
               event.delta.type === "text_delta"
             ) {
               fullText += event.delta.text;
-              // Send a heartbeat so the client knows we're still alive
               controller.enqueue(enc.encode(`data: ${JSON.stringify({ progress: true })}\n\n`));
             }
           }
 
-          // ── Parse JSON calendar from complete text ──────────────
-          let calendarData;
+          // ── Parse JSON from complete response ──────────────────
+          let calendarData: CalendarData & { id?: string };
           try {
             const jsonStart = fullText.indexOf("{");
             const jsonEnd = fullText.lastIndexOf("}");
-            if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON found in Claude response");
+            if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON in response");
             calendarData = JSON.parse(fullText.slice(jsonStart, jsonEnd + 1));
           } catch {
-            console.error("Calendar JSON parse failed. First 500 chars:", fullText.slice(0, 500));
+            console.error("Calendar JSON parse error. First 500 chars:", fullText.slice(0, 500));
             controller.enqueue(enc.encode(`data: ${JSON.stringify({ error: "Dr. Pesos returned an unexpected format — please try again." })}\n\n`));
             controller.enqueue(enc.encode("data: [DONE]\n\n"));
             controller.close();
             return;
           }
 
-          // ── Save to Supabase (authenticated users only) ─────────
+          // ── Save to Supabase ────────────────────────────────────
           if (user && !demo) {
             try {
               const { saveGrowCalendar } = await import("@/lib/supabase/queries");
               const saved = await saveGrowCalendar(
                 user.id,
                 setup as unknown as Record<string, unknown>,
-                calendarData.weeks,
+                calendarData.weeks as unknown as Record<string, unknown>[],
                 calendarData.totalWeeks,
                 calendarData.estimatedHarvestDate
               );
               calendarData.id = saved.id;
             } catch (saveError) {
-              console.error("Failed to save calendar to Supabase:", saveError);
-              // Continue — client will fall back to sessionStorage
+              console.error("Supabase save error:", saveError);
             }
           }
 
-          // Send the final calendar JSON
+          // ── Email calendar to user (if Resend is configured) ────
+          if (user?.email && !demo) {
+            sendCalendarEmail(user.email, calendarData, setup).catch((e) =>
+              console.error("Email send error:", e)
+            );
+          }
+
           controller.enqueue(enc.encode(`data: ${JSON.stringify({ calendar: calendarData })}\n\n`));
           controller.enqueue(enc.encode("data: [DONE]\n\n"));
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
-          console.error("Calendar generation stream error:", message);
+          console.error("Calendar stream error:", message);
           controller.enqueue(enc.encode(`data: ${JSON.stringify({ error: message })}\n\n`));
           controller.enqueue(enc.encode("data: [DONE]\n\n"));
         } finally {
@@ -155,6 +160,87 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// ── Email delivery (Resend) ──────────────────────────────────────────
+// Requires RESEND_API_KEY and RESEND_FROM_EMAIL env vars.
+// Sign up free at resend.com and verify your sending domain.
+async function sendCalendarEmail(
+  toEmail: string,
+  calendar: CalendarData & { id?: string },
+  setup: GrowSetup
+): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const fromEmail = process.env.RESEND_FROM_EMAIL;
+  if (!apiKey || !fromEmail) return; // Skip silently if not configured
+
+  const strainDisplay = setup.strainGenetics
+    ? `${setup.strainType?.replace(/_/g, "-")} — ${setup.strainGenetics}`
+    : setup.strainType?.replace(/_/g, "-");
+  const lightDesc = setup.lightWattage
+    ? `${setup.lightType?.toUpperCase()} (${setup.lightWattage})`
+    : setup.lightType?.toUpperCase();
+
+  const weekRows = calendar.weeks.map((week) => {
+    const taskList = week.dailyTasks
+      .map((t) => `<li style="margin-bottom:4px;color:#333;">${t.task}</li>`)
+      .join("");
+    return `
+      <div style="padding:16px 0;border-bottom:1px solid #e5e7eb;">
+        <h3 style="margin:0 0 2px;font-size:15px;color:#16a34a;">Week ${week.week} — ${week.stage.charAt(0).toUpperCase() + week.stage.slice(1)}</h3>
+        <p style="margin:0 0 10px;font-size:12px;color:#9ca3af;">${new Date(week.startDate).toLocaleDateString("en-US",{month:"short",day:"numeric"})} → ${new Date(week.endDate).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</p>
+        <ul style="margin:0 0 10px;padding-left:16px;font-size:13px;">${taskList}</ul>
+        <div style="background:#f9fafb;border-radius:6px;padding:8px 12px;font-size:12px;color:#6b7280;">
+          🌡️ ${week.envTargets.tempF} &nbsp;|&nbsp; 💧 RH ${week.envTargets.rh} &nbsp;|&nbsp; 💨 VPD ${week.envTargets.vpd} &nbsp;|&nbsp; ☀️ ${week.envTargets.lightSchedule}
+        </div>
+        ${week.drPesosNote ? `<p style="margin:8px 0 0;font-size:12px;color:#16a34a;font-style:italic;">"${week.drPesosNote}"</p>` : ""}
+      </div>`;
+  }).join("");
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your Grow Calendar — Dr. Pesos</title></head>
+<body style="margin:0;padding:20px;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
+  <div style="max-width:680px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <div style="background:#16a34a;padding:28px 24px;color:#fff;">
+      <h1 style="margin:0;font-size:22px;font-weight:700;">Your Grow Calendar is Ready 🌿</h1>
+      <p style="margin:6px 0 0;font-size:14px;opacity:.9;">Generated by Dr. Pesos Grow Coach AI · Powered by Ori Company</p>
+    </div>
+    <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;background:#f9fafb;">
+      <h2 style="margin:0 0 12px;font-size:16px;color:#111;">Grow Setup Summary</h2>
+      <table style="width:100%;font-size:13px;color:#374151;border-collapse:collapse;">
+        <tr><td style="padding:3px 0;width:50%;">🌿 <strong>Strain:</strong> ${strainDisplay}</td><td style="padding:3px 0;">🪴 <strong>Medium:</strong> ${setup.medium?.replace(/_/g," ")}</td></tr>
+        <tr><td style="padding:3px 0;">💡 <strong>Light:</strong> ${lightDesc}</td><td style="padding:3px 0;">🧪 <strong>Nutrients:</strong> ${setup.nutrientType}</td></tr>
+        <tr><td style="padding:3px 0;">📐 <strong>Space:</strong> ${setup.spaceSize} ft</td><td style="padding:3px 0;">📅 <strong>Weeks:</strong> ${calendar.totalWeeks} total</td></tr>
+        <tr><td style="padding:3px 0;" colspan="2">🎯 <strong>Goals:</strong> ${setup.goals.join(", ")}</td></tr>
+      </table>
+    </div>
+    <div style="padding:0 24px 8px;">
+      ${weekRows}
+    </div>
+    <div style="padding:16px 24px;background:#f9fafb;text-align:center;font-size:12px;color:#9ca3af;">
+      <p style="margin:0;">You can print this email as a PDF using your browser's print function (Ctrl/Cmd + P → Save as PDF).</p>
+      <p style="margin:8px 0 0;">Dr. Pesos Grow Coach AI · <a href="https://drpesos-growcoach-ai.vercel.app" style="color:#16a34a;">Open App</a></p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: fromEmail,
+      to: toEmail,
+      subject: `Your ${strainDisplay ?? "Grow"} Calendar — Dr. Pesos (${calendar.totalWeeks} weeks)`,
+      html,
+    }),
+  });
+}
+
+// ── Prompt builder ────────────────────────────────────────────────────
 function buildCalendarPrompt(setup: GrowSetup): string {
   const goals = setup.goals.join(", ");
   const primaryLightBase = setup.lightWattage
@@ -164,74 +250,81 @@ function buildCalendarPrompt(setup: GrowSetup): string {
     ? `${primaryLightBase} + Under Canopy Supplemental Lighting`
     : primaryLightBase;
 
-  // Medium-specific guidance hints
   const mediumGuidance: Record<string, string> = {
-    soil: "Use soil pH targets 6.0–7.0. Water when top inch is dry. Slower nutrient uptake — adjust feed frequency accordingly.",
-    living_soil: "Living soil — use organic top-dresses and compost teas instead of liquid feeds. pH self-regulates 6.2–7.0. Avoid synthetic inputs that kill microbial life. No pre-harvest flush needed.",
-    coco: "Coco coir — pH 5.5–6.5. Daily or twice-daily fertigation. Never let coco dry out fully. Always include CalMag in every feed.",
-    hydro: "Deep Water Culture / NFT — pH 5.5–6.5, monitor EC and DO (dissolved oxygen) daily. Reservoir changes every 7–10 days. Fast growth — update feeding every 3–4 days.",
-    aeroponics: "Aeroponics — pH 5.5–6.2. Mist cycles every 3–5 min. Reservoir temp must stay below 68°F to prevent root rot. Maximum oxygen exposure — fastest growth possible. Advanced troubleshooting may be needed.",
-    rockwool: "Rockwool / Stonewool — pre-soak in pH 5.5 water for 24hrs before use. pH 5.5–6.5. Daily drip irrigation with 10–20% runoff. Never reuse rockwool between grows.",
+    soil: "Soil pH 6.0–7.0. Water when top inch dry. Slower nutrient uptake.",
+    living_soil: "Living soil — organic top-dresses and compost teas only. pH 6.2–7.0. No synthetics.",
+    coco: "Coco coir — pH 5.5–6.5. Daily fertigation. Never let dry. Always include CalMag.",
+    hydro: "DWC/NFT — pH 5.5–6.5. Monitor EC and DO daily. Reservoir changes every 7–10 days.",
+    aeroponics: "Aeroponics — pH 5.5–6.2. Mist cycles every 3–5 min. Reservoir temp below 68°F.",
+    rockwool: "Rockwool — pre-soak pH 5.5 for 24hrs. pH 5.5–6.5. Daily drip with 10–20% runoff.",
   };
 
-  // Light-specific PPFD and heat guidance
   const lightGuidance: Record<string, string> = {
-    led: `LED ${setup.lightWattage ?? ""} — energy-efficient, low heat, full spectrum. Run at 18–24" canopy distance. Dimming capability allows precise PPFD control per stage. Higher PPFD possible with less heat stress vs HPS. Check manufacturer DLI charts for optimal canopy distance per stage.`,
-    hps: `High Pressure Sodium ${setup.lightWattage ?? ""} — intense heat output. Maintain 18–24" canopy distance for 1000W (further for larger wattages). Excellent for flowering. Use air-cooled hoods if possible. Monitor temps carefully — HPS can push room 10–15°F above ambient.`,
-    hid: `High-Intensity Discharge ${setup.lightWattage ?? ""} — broad category. Use Metal Halide (MH) for veg (6500K) and HPS for flower (2700K) if switchable ballast. Heat management critical — use environmental controls accordingly.`,
-    cmh: `Ceramic Metal Halide ${setup.lightWattage ?? ""} — full-spectrum output with excellent terpene and resin production. Run at 24" canopy distance. Moderate heat output. No UV blocking glass — do not touch bulb bare-handed.`,
-    fluorescent: `Fluorescent T5 ${setup.lightWattage ?? ""} — low intensity, ideal for seedlings, clones, and propagation. Keep lights 4–6" above canopy. Suitable for vegetative phase only — supplement with HID or LED for flower.`,
-    tungsten: `Tungsten ${setup.lightWattage ?? ""} — incandescent. Very low efficiency and PAR output. Primarily useful as supplemental warm-spectrum light. Not recommended as primary grow light — calibrate PPFD targets accordingly.`,
-    under_canopy: `Under Canopy Lighting ${setup.lightWattage ?? ""} — supplemental lighting placed below main canopy. Target lower bud sites that receive less than 200 μmol. Schedule activation in mid to late flower to maximize lower cola development.`,
+    led: `LED ${setup.lightWattage ?? ""} — run at 18–24" canopy distance. Adjust PPFD per stage.`,
+    hps: `HPS ${setup.lightWattage ?? ""} — intense heat. 18–24" distance. Monitor temps carefully.`,
+    hid: `HID ${setup.lightWattage ?? ""} — MH for veg, HPS for flower. Heat management critical.`,
+    cmh: `CMH ${setup.lightWattage ?? ""} — full spectrum. 24" canopy distance. No UV-blocking glass.`,
+    fluorescent: `T5 ${setup.lightWattage ?? ""} — keep 4–6" above canopy. Veg and propagation only.`,
+    tungsten: `Tungsten ${setup.lightWattage ?? ""} — low PAR output. Supplemental use only.`,
+    under_canopy: `Under Canopy ${setup.lightWattage ?? ""} — activate mid-flower (wk 4–5). Target lower colas under 200 μmol.`,
   };
 
-  // Nutrient-specific guidance
   const nutrientGuidance = setup.nutrientType === "organic"
-    ? "ORGANIC nutrient program: Use compost teas (aerated, 24-48hrs), top-dresses of dry amendments (e.g. BuildASoil Craft Blend, Bokashi, worm castings, kelp meal). No synthetic salt nutrients. Adjust inputs 7–10 days before needed due to slow release. No chemical flush required — organic grows finish clean naturally. pH guidance based on living soil (6.2–7.0 target)."
-    : "SYNTHETIC nutrient program: Use Advanced Nutrients base (Micro / Grow / Bloom) with stage-appropriate boosters (Big Bud, Overdrive, Bud Candy). Adjust pH per medium. Include pre-harvest flush 5–7 days before cut. Provide weekly EC targets per stage.";
+    ? "ORGANIC: Compost teas, dry amendments (BuildASoil, Bokashi, worm castings). No synthetics. Adjust 7–10 days ahead. No flush needed."
+    : "SYNTHETIC: Advanced Nutrients base (Micro/Grow/Bloom) + boosters. Adjust pH per medium. Provide weekly EC targets. Pre-harvest flush 5–7 days.";
 
   const strainDisplay = setup.strainGenetics
-    ? `${setup.strainType?.replace("_", "-")} — ${setup.strainGenetics}`
-    : setup.strainType?.replace("_", "-");
+    ? `${setup.strainType?.replace(/_/g, "-")} — ${setup.strainGenetics}`
+    : setup.strainType?.replace(/_/g, "-");
 
-  return `Generate a complete grow calendar for this specific cultivation setup:
+  return `Generate a complete, concise grow calendar as JSON.
 
-GROW SETUP:
-- Experience Level: ${setup.experienceLevel}
-- Strain Type: ${strainDisplay}
-${setup.strainGenetics ? `- Strain Genetics / Name: ${setup.strainGenetics}` : ""}
-- Grow Medium: ${setup.medium?.replace("_", " ")}
-- Lighting: ${lightDesc}
-- Nutrient Program: ${setup.nutrientType}
-- Space Size: ${setup.spaceSize} ft
-- Start Date: ${setup.startDate}
+SETUP:
+- Experience: ${setup.experienceLevel}
+- Strain: ${strainDisplay}
+- Medium: ${setup.medium?.replace(/_/g, " ")}
+- Light: ${lightDesc}
+- Nutrients: ${setup.nutrientType}
+- Space: ${setup.spaceSize} ft
+- Start: ${setup.startDate}
 - Goals: ${goals}
-${setup.currentStage ? `- Currently in: ${setup.currentStage} (day ${setup.currentDayInStage || 1})` : "- Starting from: germination"}
+${setup.currentStage ? `- Current stage: ${setup.currentStage} (day ${setup.currentDayInStage || 1})` : "- Starting from: germination"}
 
-MEDIUM-SPECIFIC REQUIREMENTS:
-${mediumGuidance[setup.medium ?? "soil"] ?? ""}
+MEDIUM: ${mediumGuidance[setup.medium ?? "soil"] ?? ""}
+LIGHT: ${lightGuidance[setup.lightType ?? "led"] ?? ""}${setup.underCanopyLight ? " Activate under-canopy lights mid-flower (wk 4–5), target lower bud sites." : ""}
+NUTRIENTS: ${nutrientGuidance}
 
-LIGHT-SPECIFIC REQUIREMENTS:
-${lightGuidance[setup.lightType ?? "led"] ?? ""}${setup.underCanopyLight ? "\nUNDER CANOPY SUPPLEMENTAL: Schedule activation starting mid-flower (week 4–5 of flower). Target lower bud sites receiving under 200 μmol. Place lights 12–18\" below main canopy. Include specific tasks for positioning, power-on timing, and monitoring lower cola development." : ""}
+${setup.strainGenetics ? `STRAIN NOTES: Use known traits of "${setup.strainGenetics}" — expected flower time, stretch, sensitivities, harvest window.` : ""}
 
-NUTRIENT PROGRAM REQUIREMENTS:
-${nutrientGuidance}
+Strain type guide:
+- autoflower: 10–12 week total cycle, no light flip
+- indica_dominant: veg 4–5 wks, flower 8–9 wks
+- sativa_dominant: veg 5–6 wks, flower 10–12 wks
+- hybrid: veg 4–6 wks, flower 8–10 wks
 
-Create a complete week-by-week calendar from ${setup.currentStage ? "current stage" : "germination"} through dry and cure.
+Dr. Pesos defoliation schedule: veg = every other week; flower = twice (early wk 1–2, mid wk 4–5).
+Goals: ${goals.includes("yield") ? "Include LST, topping, SCROG." : ""}${goals.includes("speed") ? " Short veg, early flip." : ""}${goals.includes("quality") ? " Slow dry 10–14 days, 4-week cure, trichome harvest timing." : ""}
 
-${setup.strainGenetics ? `STRAIN-SPECIFIC GUIDANCE: The user is growing "${setup.strainGenetics}". Use any known characteristics of this strain or its genetics to calibrate: expected flower time, typical stretch factor, terpene profile, known sensitivities (e.g. nutrient burn sensitivity, mold susceptibility, optimal harvest window), and any training notes specific to this genetics. If this is a well-known commercial strain, reference its specific traits directly.` : ""}
+IMPORTANT: Be concise. Max 5–6 tasks per week. Short task descriptions (under 12 words each).
 
-For ${setup.strainType === "autoflower" ? "this autoflower strain, total cycle is typically 10–12 weeks (no light flip needed)" : setup.strainType === "indica_dominant" ? "this indica-dominant photoperiod strain, include veg (4–5 weeks) and flower (8–9 weeks) stages" : setup.strainType === "sativa_dominant" ? "this sativa-dominant photoperiod strain, include veg (5–6 weeks) and flower (10–12 weeks) stages — account for significant stretch during flip" : "this hybrid photoperiod strain, include veg (4–6 weeks) and flower (8–10 weeks) stages"}.
-
-Apply Dr. Pesos signature defoliation schedule:
-- Vegetative stage: schedule defoliation every other week
-- Flower stage: schedule defoliation exactly twice (early flower weeks 1–2, and mid flower weeks 4–5)
-
-Calibrate ALL guidance to this exact combination: ${setup.medium?.replace("_", " ")} medium + ${lightDesc} + ${setup.nutrientType} nutrients + ${setup.spaceSize} space.
-Every task, pH target, EC value, PPFD target, and watering frequency must be specific to THIS setup — not generic advice.
-
-Tailor detail level to ${setup.experienceLevel} grower.
-${goals.includes("yield") ? "Emphasize training techniques (LST, topping, SCROG) and canopy management for maximum yield." : ""}
-${goals.includes("speed") ? "Optimize for fastest cycle time: shorter veg, consider early flip at day 30–35 of veg." : ""}
-${goals.includes("quality") ? "Prioritize quality: slow dry (10–14 days at 60°F/60% RH), minimum 4-week cure, trichome-based harvest timing." : ""}`;
+Return ONLY valid JSON — no markdown fences, no explanation text:
+{
+  "totalWeeks": <number>,
+  "estimatedHarvestDate": "<ISO date>",
+  "weeks": [
+    {
+      "week": 1,
+      "stage": "<germination|seedling|vegetative|flower|harvest|dry|cure>",
+      "startDate": "<ISO date>",
+      "endDate": "<ISO date>",
+      "dailyTasks": [
+        { "id": "w1-t1", "task": "<task>", "category": "<watering|nutrients|training|ipm|environment|defoliation|observation|harvest>", "priority": "<required|recommended|optional>", "drPesosNote": "<optional short tip>" }
+      ],
+      "envTargets": { "tempF": "<range>", "rh": "<range>", "vpd": "<range>", "ppfd": "<range>", "lightSchedule": "<e.g. 18/6>" },
+      "nutrients": "<brief nutrient note>",
+      "defoliationScheduled": <true|false>,
+      "drPesosNote": "<one encouraging sentence>"
+    }
+  ]
+}`;
 }

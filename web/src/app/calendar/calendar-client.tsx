@@ -26,6 +26,7 @@ import {
   FlaskConical,
   Eye,
   Sprout,
+  Download,
 } from "lucide-react";
 import type { DailyTask, CalendarData } from "@/types/grow";
 import { cn } from "@/lib/utils";
@@ -174,11 +175,14 @@ export default function CalendarClient({ calendar: serverCalendar, initialComple
 
   return (
     <div className="min-h-screen bg-background text-foreground dark">
-      <AiChat />
+      {/* Hidden in print */}
+      <div className="print:hidden">
+        <AiChat />
+      </div>
 
       {/* Demo mode banner */}
       {isDemo && (
-        <div className="sticky top-0 z-40 bg-primary/10 border-b border-primary/30 px-6 py-2.5">
+        <div className="sticky top-0 z-40 bg-primary/10 border-b border-primary/30 px-6 py-2.5 print:hidden">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
             <p className="text-xs text-primary font-medium">
               <span className="font-bold">Live Demo</span> — This is a sample 14-week grow calendar. Sign up for free to generate your personalized plan.
@@ -193,7 +197,7 @@ export default function CalendarClient({ calendar: serverCalendar, initialComple
       )}
 
       {/* Header */}
-      <div className="sticky top-0 z-30 border-b border-border/50 bg-background/90 backdrop-blur-xl">
+      <div className="sticky top-0 z-30 border-b border-border/50 bg-background/90 backdrop-blur-xl print:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
@@ -202,16 +206,25 @@ export default function CalendarClient({ calendar: serverCalendar, initialComple
             <span className="text-sm font-semibold hidden sm:block">Dr. Pesos Grow Coach AI</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-primary/30 text-primary text-xs">
+            <Badge variant="outline" className="border-primary/30 text-primary text-xs print:hidden">
               <CalendarDays className="mr-1 h-3 w-3" />
               {calendar.totalWeeks}-Week Grow Plan
             </Badge>
             <Link href="/dashboard">
-              <Button size="sm" variant="ghost" className="text-xs hidden sm:flex">
+              <Button size="sm" variant="ghost" className="text-xs hidden sm:flex print:hidden">
                 Dashboard
               </Button>
             </Link>
-            <Button size="sm" variant="outline" onClick={openChatWithContext} className="gap-1.5 text-xs">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => window.print()}
+              className="gap-1.5 text-xs print:hidden"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Download PDF
+            </Button>
+            <Button size="sm" variant="outline" onClick={openChatWithContext} className="gap-1.5 text-xs print:hidden">
               <MessageCircle className="h-3.5 w-3.5" />
               Ask Dr. Pesos
             </Button>
@@ -219,7 +232,7 @@ export default function CalendarClient({ calendar: serverCalendar, initialComple
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-6 py-6 lg:grid lg:grid-cols-[280px_1fr] lg:gap-6">
+      <div className="mx-auto max-w-7xl px-6 py-6 lg:grid lg:grid-cols-[280px_1fr] lg:gap-6 print:hidden">
         {/* Week Sidebar */}
         <div className="mb-6 lg:mb-0">
           <div className="rounded-xl border border-border/50 bg-card overflow-hidden">
@@ -404,6 +417,78 @@ export default function CalendarClient({ calendar: serverCalendar, initialComple
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* ── Print / PDF view — hidden on screen, visible when printing ── */}
+      <div className="hidden print:block px-8 py-6 text-black bg-white">
+        {/* Print header */}
+        <div className="mb-6 pb-4 border-b-2 border-gray-800">
+          <h1 className="text-2xl font-bold">
+            {calendar.name ?? "Grow Calendar"} — Dr. Pesos Grow Coach AI
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">
+            {calendar.totalWeeks}-week plan · Est. harvest: {formatDate(calendar.estimatedHarvestDate)} · Powered by Ori Company · We Grow Life
+          </p>
+        </div>
+
+        {/* All weeks */}
+        {calendar.weeks.map((week) => (
+          <div
+            key={week.week}
+            style={{ pageBreakInside: "avoid" }}
+            className="mb-6 border border-gray-300 rounded-lg p-4"
+          >
+            <div className="flex items-baseline justify-between mb-2">
+              <h2 className="text-lg font-bold">
+                Week {week.week} — <span className="capitalize">{week.stage}</span>
+                {week.defoliationScheduled && " ✂️ Defoliation"}
+              </h2>
+              <span className="text-xs text-gray-500">
+                {formatDate(week.startDate)} – {formatDate(week.endDate)}
+              </span>
+            </div>
+
+            {/* Tasks */}
+            <ul className="mb-3 space-y-0.5">
+              {week.dailyTasks.map((t) => (
+                <li key={t.id} className="text-sm flex items-start gap-2">
+                  <span className="mt-0.5 text-gray-400 shrink-0">☐</span>
+                  <span>{t.task}</span>
+                  {t.priority === "required" && (
+                    <span className="text-xs text-red-600 shrink-0">(required)</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+
+            {/* Env targets */}
+            <div className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2">
+              🌡️ {week.envTargets.tempF} &nbsp;|&nbsp;
+              💧 RH {week.envTargets.rh} &nbsp;|&nbsp;
+              💨 VPD {week.envTargets.vpd} &nbsp;|&nbsp;
+              ☀️ {week.envTargets.lightSchedule} &nbsp;|&nbsp;
+              📡 {week.envTargets.ppfd}
+            </div>
+
+            {/* Nutrients */}
+            {week.nutrients && (
+              <p className="mt-2 text-xs text-gray-600">
+                <strong>Nutrients:</strong> {week.nutrients}
+              </p>
+            )}
+
+            {/* Dr. Pesos note */}
+            {week.drPesosNote && (
+              <p className="mt-2 text-xs italic text-green-800">
+                Dr. Pesos: &quot;{week.drPesosNote}&quot;
+              </p>
+            )}
+          </div>
+        ))}
+
+        <p className="text-center text-xs text-gray-400 mt-8 pt-4 border-t border-gray-200">
+          Generated by Dr. Pesos Grow Coach AI · drpesos-growcoach-ai.vercel.app
+        </p>
       </div>
     </div>
   );
