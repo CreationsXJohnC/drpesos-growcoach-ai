@@ -27,7 +27,7 @@ export default function HomePage() {
           <div className="flex items-center gap-2.5">
             <div className="relative h-9 w-9 overflow-hidden rounded-lg">
               <Image
-                src="/Dr.%20Pesos%20GreenTee%20notext.png"
+                src="/Ori-Badge02.png"
                 alt="Dr. Pesos"
                 fill
                 className="object-contain"

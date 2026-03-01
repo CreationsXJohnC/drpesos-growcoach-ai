@@ -103,7 +103,7 @@ return (
             <div className="relative h-7 w-7 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center">
               <Leaf className="h-4 w-4 text-primary" />
               <Image
-                src="/Dr.%20Pesos%20GreenTee%20notext.png"
+                src="/Ori-Badge02.png"
                 alt="Dr. Pesos"
                 fill
                 className="object-contain p-0.5"

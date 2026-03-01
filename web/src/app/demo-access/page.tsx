@@ -66,7 +66,7 @@ export default function DemoAccessPage() {
             <div className="relative h-8 w-8 overflow-hidden rounded-lg bg-primary/10">
               <Leaf className="absolute inset-0 m-auto h-4 w-4 text-primary" />
               <Image
-                src="/Dr.%20Pesos%20GreenTee%20notext.png"
+                src="/Ori-Badge02.png"
                 alt="Dr. Pesos"
                 fill
                 className="object-contain p-0.5"

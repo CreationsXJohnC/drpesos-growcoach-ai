@@ -9,7 +9,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import Image from "next/image";
 import {
   MessageCircle,
   X,
@@ -186,16 +185,7 @@ export function AiChat() {
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-primary px-4 py-3 text-primary-foreground shadow-lg glow-green hover:scale-105 transition-all duration-200"
         aria-label="Open Dr. Pesos Grow Coach AI"
       >
-        <div className="relative h-6 w-6 flex items-center justify-center">
-          <Leaf className="h-5 w-5 text-primary-foreground" />
-          <Image
-            src="/Dr.%20Pesos%20GreenTee%20notext.png"
-            alt="Dr. Pesos"
-            fill
-            className="object-contain"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-          />
-        </div>
+        <Leaf className="h-5 w-5 text-primary-foreground" />
         <span className="text-sm font-semibold hidden sm:block">Ask Dr. Pesos</span>
       </button>
     );
@@ -215,15 +205,8 @@ export function AiChat() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3 bg-card rounded-t-2xl max-sm:rounded-none">
         <div className="flex items-center gap-2">
-          <div className="relative h-8 w-8 overflow-hidden rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
             <Leaf className="h-4 w-4 text-primary" />
-            <Image
-              src="/Dr.%20Pesos%20GreenTee%20notext.png"
-              alt="Dr. Pesos"
-              fill
-              className="object-contain p-0.5"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-            />
           </div>
           <div>
             <p className="text-sm font-semibold">Dr. Pesos Grow Coach AI</p>
